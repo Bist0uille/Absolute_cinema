@@ -9,13 +9,13 @@ Plan complet : voir le plan de validation (Phases 0 → 3, critères GO/KILL).
 - `email-tmdb.md` — brouillon d'email pour la licence commerciale TMDB (à envoyer en premier : la réponse conditionne le modèle)
 - `guide-entretiens.md` — les 10 questions des entretiens de validation
 
-## Mettre la landing en ligne (gratuit, ~15 min)
+## ✅ DÉJÀ EN LIGNE (nuit du 2 au 3 juillet 2026)
 
-1. Créer un compte GitHub (si besoin) → nouveau dépôt public, p. ex. `videotheque-poche`.
-2. Y déposer `landing/index.html` renommé `index.html` à la racine.
-3. Réglages du dépôt → Pages → Source : branche `main` → la page est en ligne sur `https://<pseudo>.github.io/videotheque-poche/`.
-4. Créer un formulaire gratuit sur https://formspree.io (50 envois/mois gratuits) et remplacer `VOTRE_ID` dans le HTML.
-5. Tester en s'envoyant un email, puis mettre le lien dans les posts/annonces.
+- **Site + vidéo** : https://bist0uille.github.io/Absolute_cinema/ (source : `docs/` du repo)
+- **Repo public** : https://github.com/Bist0uille/Absolute_cinema (code GPL-3.0)
+- **Bêta téléchargeable** : https://github.com/Bist0uille/Absolute_cinema/releases (zips Windows/Mac/Linux)
+- **Formulaire email** : Formspree `mdarppnn` actif et testé (un email de test a été envoyé)
+- `landing/index.html` est l'ancien brouillon — la vraie page est `docs/index.html`.
 
 ## Ordre de marche (Phase 1)
 
