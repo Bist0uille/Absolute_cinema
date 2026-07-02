@@ -183,6 +183,32 @@ const EN = {
   "Lancer le scan 🎬": "Start the scan 🎬",
   "La clé reste sur votre disque, rien n'est envoyé ailleurs.": "The key stays on your drive; nothing is sent anywhere else.",
   "Pensez aussi à installer VLC pour la lecture :": "Also install VLC for playback:",
+  /* lecteur intégré & Netflix-like */
+  "Reprendre": "Resume",
+  "Commencer": "Start",
+  "▶ Reprendre": "▶ Resume",
+  "Ajoutés récemment": "Recently added",
+  "Tout parcourir": "Browse all",
+  "Fiche": "Details",
+  "Lire dans VLC": "Play in VLC",
+  "Ce format n'est pas lisible dans le navigateur.": "This format can't play in the browser.",
+  "Le navigateur ne peut pas lire ce fichier (codec non supporté).": "The browser can't play this file (unsupported codec).",
+  "Reprise à": "Resumed at",
+  "Recommencer du début": "Restart from the beginning",
+  "Vu": "Watched",
+  "Marquer comme vu": "Mark as watched",
+  "Marquer comme non vu": "Mark as unwatched",
+  "Épisode suivant": "Next episode",
+  "Accès depuis la TV et les tablettes (réseau local)": "Access from TVs and tablets (local network)",
+  "Quand cette option est activée, la bibliothèque est accessible depuis les appareils de votre réseau Wi-Fi (TV connectée, tablette, téléphone) à l'adresse ci-dessous. Redémarrez l'application après le changement.":
+    "When enabled, the library is reachable from devices on your Wi-Fi network (smart TV, tablet, phone) at the address below. Restart the app after changing this.",
+  "Activé": "Enabled",
+  "Désactivé": "Disabled",
+  "Adresse pour la TV :": "TV address:",
+  "⚠ Réservez cette option à votre réseau domestique.": "⚠ Keep this option for your home network only.",
+  "Redémarrez l'application pour appliquer.": "Restart the app to apply.",
+  "Sous-titres :": "Subtitles:",
+  "Aucun": "None",
 };
 
 function t(s) { return state.lang === "en" ? (EN[s] ?? s) : s; }
@@ -375,8 +401,12 @@ function ratingPicker(mediaType, tmdbID, current) {
 /* ---------- chargement ---------- */
 
 async function loadLibrary() {
-  const data = await api("/api/library");
+  const [data, progress] = await Promise.all([
+    api("/api/library"),
+    api("/api/progress").catch(() => ({})),
+  ]);
   state.lib = data;
+  state.progress = progress;
   state.scanning = data.scanning;
   state.lang = resolveLang();
   if (data.scanning) pollScan();
@@ -467,7 +497,192 @@ async function play(path, subPath, parts) {
 window._playVersion = (btn) => {
   const row = btn.closest("[data-path]");
   const sel = $("select", row);
-  play(row.dataset.path, sel ? sel.value : "", JSON.parse(row.dataset.parts || "[]"));
+  const v = findVersionByPath(row.dataset.path);
+  if (v) playSmart(v.version, sel ? sel.value : "", v.title);
+  else play(row.dataset.path, sel ? sel.value : "", JSON.parse(row.dataset.parts || "[]"));
+};
+
+/* ---------- lecteur intégré ---------- */
+
+// le navigateur sait-il probablement lire ce fichier ?
+function canPlayInBrowser(v) {
+  if (!v || v.is_iso) return false;
+  const ext = (v.container || "").toLowerCase();
+  const raw = (v.raw_name || "").toLowerCase();
+  const hevc = /x265|hevc|h\.?265/.test(raw);
+  if (ext === "mp4" || ext === "m4v" || ext === "webm") return !hevc;
+  if (ext === "mkv") return !hevc; // mkv h264 passe dans Chrome/Edge
+  return false;
+}
+
+function progFor(path) { return (state.progress || {})[path]; }
+
+// retrouve une version (film ou épisode) par son chemin, avec un titre d'affichage
+function findVersionByPath(path) {
+  for (const m of state.lib.movies || []) {
+    for (const v of m.versions || []) {
+      if (v.path === path) return { version: v, title: m.title_fr };
+    }
+  }
+  for (const s of state.lib.series || []) {
+    for (const se of s.seasons || []) {
+      for (const ep of se.episodes || []) {
+        for (const f of ep.files || []) {
+          if (f.path === path) {
+            return { version: f, title: `${s.title_fr} S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}` };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// lecture intelligente : navigateur si possible, sinon VLC
+function playSmart(version, subPath, title) {
+  if (canPlayInBrowser(version)) openPlayer(version, subPath, title);
+  else play(version.path, subPath, version.parts || []);
+}
+
+let playerState = null; // { path, timer }
+
+function openPlayer(version, subPath, title) {
+  closePlayer();
+  const path = version.path;
+  const subs = (version.external_subs || []).filter(s => /\.(srt|vtt)$/i.test(s.path));
+  const prog = progFor(path);
+  const resume = prog && prog.duration > 0 && prog.position > 30 && prog.position / prog.duration < 0.95 ? prog.position : 0;
+
+  const root = $("#player-root");
+  root.innerHTML = `
+  <div class="player-back">
+    <div class="player-top">
+      <span class="player-title">${esc(title || path.split("/").pop())}</span>
+      <span style="flex:1"></span>
+      ${subs.length ? `<select id="player-sub">
+        <option value="">${t("Sous-titres :")} ${t("Aucun")}</option>
+        ${subs.map(s => `<option value="${esc(s.path)}" ${s.path === subPath ? "selected" : ""}>${esc((s.lang || "st").toUpperCase())} — ${esc(s.path.split("/").pop().slice(0, 45))}</option>`).join("")}
+      </select>` : ""}
+      <button class="ghost" onclick="_playerToVLC()">${t("Lire dans VLC")}</button>
+      <button class="ghost" onclick="closePlayer()">✕</button>
+    </div>
+    <video id="player-video" controls autoplay crossorigin="anonymous">
+      <source src="/media/stream?path=${encodeURIComponent(path)}">
+    </video>
+    <div id="player-error" class="hidden">
+      <p>${t("Le navigateur ne peut pas lire ce fichier (codec non supporté).")}</p>
+      <button class="play" onclick="_playerToVLC()">${t("Lire dans VLC")}</button>
+    </div>
+  </div>`;
+
+  const video = $("#player-video");
+  playerState = { path, version, timer: null };
+
+  const setTrack = (sp) => {
+    [...video.querySelectorAll("track")].forEach(x => x.remove());
+    if (!sp) return;
+    const tr = document.createElement("track");
+    tr.kind = "subtitles";
+    tr.src = "/media/subtitle?path=" + encodeURIComponent(sp);
+    tr.default = true;
+    video.appendChild(tr);
+    setTimeout(() => { if (video.textTracks[0]) video.textTracks[0].mode = "showing"; }, 300);
+  };
+  if (subPath) setTrack(subPath);
+  const subSel = $("#player-sub");
+  if (subSel) subSel.onchange = () => setTrack(subSel.value);
+
+  video.addEventListener("loadedmetadata", () => {
+    if (resume) {
+      video.currentTime = resume;
+      const h = Math.floor(resume / 3600), mn = Math.floor(resume % 3600 / 60);
+      toast(`${t("Reprise à")} ${h ? h + " h " : ""}${mn} min`, 4000);
+    }
+  });
+  video.addEventListener("error", () => {
+    $("#player-error").classList.remove("hidden");
+    video.classList.add("hidden");
+  });
+  video.addEventListener("ended", () => {
+    saveProgress(path, video.duration || 0, video.duration || 0, true);
+    closePlayer();
+  });
+
+  playerState.timer = setInterval(() => {
+    if (!video.paused && video.duration) saveProgress(path, video.currentTime, video.duration);
+  }, 10000);
+
+  document.addEventListener("keydown", playerEsc);
+}
+
+function playerEsc(e) { if (e.key === "Escape") closePlayer(); }
+
+function saveProgress(path, position, duration, watched) {
+  const body = { path, position, duration };
+  if (watched !== undefined) body.watched = watched;
+  state.progress = state.progress || {};
+  state.progress[path] = { ...(state.progress[path] || {}), position, duration, watched: watched ?? (state.progress[path] || {}).watched };
+  fetch("/api/progress", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => { });
+}
+
+window.closePlayer = () => {
+  const video = $("#player-video");
+  if (video && playerState && video.duration && video.currentTime > 10) {
+    saveProgress(playerState.path, video.currentTime, video.duration);
+  }
+  if (playerState?.timer) clearInterval(playerState.timer);
+  playerState = null;
+  $("#player-root").innerHTML = "";
+  document.removeEventListener("keydown", playerEsc);
+  render(); // rafraîchir les barres de progression
+};
+
+window._playerToVLC = () => {
+  const video = $("#player-video");
+  const st = playerState;
+  if (video && st && video.duration && video.currentTime > 10) {
+    saveProgress(st.path, video.currentTime, video.duration);
+  }
+  const sub = $("#player-sub")?.value || "";
+  const parts = st?.version?.parts || [];
+  const path = st?.path;
+  closePlayer();
+  if (path) play(path, sub, parts);
+};
+
+/* lecture directe depuis une carte (1 clic) */
+function bestVersion(m) {
+  const score = v => (({ "2160p": 4, "1080p": 3, "720p": 2 })[v.resolution_tag] || 1) - (v.is_iso ? 10 : 0) + (canPlayInBrowser(v) ? 0.5 : 0);
+  return [...(m.versions || [])].sort((a, b) => score(b) - score(a))[0];
+}
+
+function nextEpisode(s) {
+  const eps = (s.seasons || []).flatMap(se => se.episodes || []).filter(e => (e.files || []).length);
+  if (!eps.length) return null;
+  for (const e of eps) {
+    const p = progFor(e.files[0].path);
+    if (!p?.watched) return e;
+  }
+  return eps[0];
+}
+
+window._quickPlayMovie = (id, ev) => {
+  ev.stopPropagation();
+  const m = (state.lib.movies || []).find(x => x.id === id);
+  const v = m && bestVersion(m);
+  if (v) playSmart(v, "", m.title_fr);
+};
+
+window._quickPlaySeries = (id, ev) => {
+  ev.stopPropagation();
+  const s = (state.lib.series || []).find(x => x.id === id);
+  const ep = s && nextEpisode(s);
+  if (ep) playSmart(ep.files[0], "", `${s.title_fr} S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}`);
+};
+
+window._resumePath = (path) => {
+  const found = findVersionByPath(path);
+  if (found) playSmart(found.version, "", found.title);
 };
 
 /* ---------- routing ---------- */
@@ -612,8 +827,10 @@ function renderHome() {
     (a.title_fr || "").localeCompare(b.title_fr || "", locale()));
 
   const nbReview = items.filter(m => m.needs_review).length;
+  const noFilter = !state.search && !state.filters.genre && !state.filters.lang && !state.filters.decade;
 
   app.innerHTML = `
+  ${noFilter ? heroHTML() + continueRow() + recentRow() : ""}
   <div class="filters">
     <div class="tabs">
       <button class="${isFilms ? "active" : ""}" onclick="_setTab('films')">${t("Films")} (${(state.lib.movies || []).length})</button>
@@ -643,12 +860,117 @@ function renderHome() {
   </div>`;
 }
 
+/* --- accueil façon Netflix --- */
+
+function heroHTML() {
+  const withBackdrop = (state.lib.movies || []).filter(m => m.backdrop && m.vote_average >= 7 && !m.needs_review);
+  if (!withBackdrop.length) return "";
+  // stable pendant la session, change à chaque visite
+  if (!state.heroId) {
+    const pick = withBackdrop[Math.floor(Math.random() * withBackdrop.length)];
+    state.heroId = pick.id;
+  }
+  const m = withBackdrop.find(x => x.id === state.heroId) || withBackdrop[0];
+  return `
+  <div class="hero" style="background-image:url('/media-cache/${esc(m.backdrop)}')">
+    <div class="hero-shade"></div>
+    <div class="hero-content">
+      <h1>${esc(m.title_fr)}</h1>
+      <div class="line" style="margin:6px 0 10px">
+        ${m.year ? `<span>${m.year}</span>` : ""}
+        ${m.vote_average ? `<span class="note">★ ${m.vote_average.toFixed(1)}</span>` : ""}
+        ${ageBadge(m.age_rating)}
+        ${(m.genres || []).slice(0, 3).map(g => `<span class="badge res">${esc(g)}</span>`).join("")}
+      </div>
+      <p class="hero-overview">${esc((m.overview_fr || "").slice(0, 220))}${(m.overview_fr || "").length > 220 ? "…" : ""}</p>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="play" onclick="_quickPlayMovie('${m.id}', event)">${t("▶ Lire")}</button>
+        <button class="ghost" onclick="location.hash='#/film/${m.id}'">${t("Fiche")}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function continueRow() {
+  const items = Object.entries(state.progress || {})
+    .filter(([, e]) => !e.watched && e.duration > 0 && e.position > 30 && e.position / e.duration < 0.95)
+    .sort((a, b) => new Date(b[1].updated_at) - new Date(a[1].updated_at))
+    .slice(0, 12)
+    .map(([path, e]) => ({ path, e, found: findVersionByPath(path) }))
+    .filter(x => x.found);
+  if (!items.length) return "";
+  return `
+  <h2 class="rowtitle">${t("▶ Reprendre")}</h2>
+  <div class="row">
+    ${items.map(({ path, e, found }) => {
+      const pct = Math.round(100 * e.position / e.duration);
+      const item = findCardForPath(path);
+      return `<div class="rowcard" onclick='_resumePath(${JSON.stringify(path)})'>
+        ${posterImg(item?.poster, "poster")}
+        <div class="progressbar"><div style="width:${pct}%"></div></div>
+        <div class="title">${esc(found.title)}</div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+// retrouve la fiche (film ou série) qui contient un chemin, pour son affiche
+function findCardForPath(path) {
+  for (const m of state.lib.movies || []) {
+    if ((m.versions || []).some(v => v.path === path)) return m;
+  }
+  for (const s of state.lib.series || []) {
+    for (const se of s.seasons || []) {
+      for (const ep of se.episodes || []) {
+        if ((ep.files || []).some(f => f.path === path)) return s;
+      }
+    }
+  }
+  return null;
+}
+
+function recentRow() {
+  const movieItems = (state.lib.movies || []).map(m => ({
+    kind: "film", item: m,
+    at: Math.max(...(m.versions || []).map(v => v.added_at || 0)),
+  }));
+  const seriesItems = (state.lib.series || []).map(s => ({
+    kind: "serie", item: s,
+    at: Math.max(0, ...(s.seasons || []).flatMap(se => (se.episodes || []).flatMap(e => (e.files || []).map(f => f.added_at || 0)))),
+  }));
+  const recent = [...movieItems, ...seriesItems].filter(x => x.at > 0)
+    .sort((a, b) => b.at - a.at).slice(0, 12);
+  if (recent.length < 3) return "";
+  return `
+  <h2 class="rowtitle">${t("Ajoutés récemment")}</h2>
+  <div class="row">
+    ${recent.map(({ kind, item }) => `
+    <div class="rowcard" onclick="location.hash='#/${kind}/${item.id}'">
+      ${posterImg(item.poster, "poster")}
+      <div class="title">${esc(item.title_fr)}</div>
+    </div>`).join("")}
+  </div>
+  <h2 class="rowtitle" style="margin-top:26px">${t("Tout parcourir")}</h2>`;
+}
+
+function cardProgressBar(m) {
+  let best = 0;
+  for (const v of m.versions || []) {
+    const p = progFor(v.path);
+    if (p && !p.watched && p.duration > 0) best = Math.max(best, p.position / p.duration);
+  }
+  if (best < 0.02 || best > 0.95) return "";
+  return `<div class="progressbar"><div style="width:${Math.round(best * 100)}%"></div></div>`;
+}
+
 function movieCard(m) {
   const badge = bestBadge(m.versions);
   const multi = (m.versions || []).length > 1;
   return `<div class="card" onclick="location.hash='#/film/${m.id}'">
     <div class="flags">${badgeHTML(badge)}${ageBadge(m.age_rating)}${m.needs_review ? `<span class="badge warn">?</span>` : ""}${multi ? `<span class="badge res">×${m.versions.length}</span>` : ""}</div>
+    <button class="hoverplay" onclick="_quickPlayMovie('${m.id}', event)" title="${t("▶ Lire")}">▶</button>
     ${posterImg(m.poster)}
+    ${cardProgressBar(m)}
     <div class="title">${esc(m.title_fr)}</div>
     <div class="sub">${m.year || ""}${m.vote_average ? ` · ★ ${m.vote_average.toFixed(1)}` : ""}</div>
   </div>`;
@@ -658,6 +980,7 @@ function seriesCard(s) {
   const nbEp = (s.seasons || []).reduce((n, se) => n + (se.episodes || []).length, 0);
   return `<div class="card" onclick="location.hash='#/serie/${s.id}'">
     <div class="flags">${ageBadge(s.age_rating)}${s.misplaced ? `<span class="badge warn">${t("égarée")}</span>` : ""}</div>
+    <button class="hoverplay" onclick="_quickPlaySeries('${s.id}', event)" title="${t("Épisode suivant")}">▶</button>
     ${posterImg(s.poster)}
     <div class="title">${esc(s.title_fr)}</div>
     <div class="sub">${(s.seasons || []).length} ${t("saison(s)")} · ${nbEp} ${t("ép.")}</div>
@@ -708,6 +1031,9 @@ function renderMovie(id) {
           ${m.needs_review ? `<span class="badge warn">${t("match incertain — corrigez dans Réglages")}</span>` : ""}
         </div>
         <p class="overview">${esc(m.overview_fr || t("Pas de synopsis."))}</p>
+        <div style="display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap">
+          <button class="play" style="font-size:16px;padding:11px 26px" onclick="_quickPlayMovie('${m.id}', event)">${moviePlayLabel(m)}</button>
+        </div>
         ${state.lib.kid_mode ? "" : `<div style="margin-top:14px">${ratingPicker("movie", m.tmdb_id, m.age_rating)}</div>`}
       </div>
     </div>
@@ -717,6 +1043,13 @@ function renderMovie(id) {
     ${(m.versions || []).map(versionRow).join("")}
   </div>
   ${state.lib.kid_mode ? "" : fixBlock(m.title_fr, "movie", m.versions?.[0]?.path)}`;
+}
+
+function moviePlayLabel(m) {
+  const v = bestVersion(m);
+  const p = v && progFor(v.path);
+  if (p && !p.watched && p.duration > 0 && p.position > 30 && p.position / p.duration < 0.95) return t("▶ Reprendre");
+  return t("▶ Lire");
 }
 
 /* bloc repliable « mauvaise fiche ? » présent sur chaque page de détail */
@@ -757,13 +1090,16 @@ function renderSeries(id) {
           ${s.misplaced ? `<span class="badge warn">${t("des fichiers sont dans [Films]")}</span>` : ""}
         </div>
         <p class="overview">${esc(s.overview_fr || t("Pas de synopsis."))}</p>
+        <div style="display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap">
+          <button class="play" style="font-size:16px;padding:11px 26px" onclick="_quickPlaySeries('${s.id}', event)">${seriesPlayLabel(s)}</button>
+        </div>
         ${state.lib.kid_mode ? "" : `<div style="margin-top:14px">${ratingPicker("tv", s.tmdb_id, s.age_rating)}</div>`}
       </div>
     </div>
   </div>
-  ${(s.seasons || []).map((se, i) => `
-  <details class="season block" ${i === 0 ? "open" : ""}>
-    <summary>${esc(se.name_fr || t("Saison") + " " + se.number)} <span class="size">${(se.episodes || []).length} ${t("épisode(s)")}</span></summary>
+  ${(s.seasons || []).map(se => `
+  <details class="season block" ${se.number === (nextEpisode(s)?.season ?? (s.seasons?.[0]?.number)) ? "open" : ""}>
+    <summary>${esc(se.name_fr || t("Saison") + " " + se.number)} <span class="size">${(se.episodes || []).length} ${t("épisode(s)")} · ${se.episodes.filter(e => progFor(e.files?.[0]?.path)?.watched).length} ${t("Vu").toLowerCase()}${state.lang === "en" ? "" : "s"}</span></summary>
     <div class="eps">
       ${(se.episodes || []).map(ep => epRow(ep)).join("")}
     </div>
@@ -771,23 +1107,45 @@ function renderSeries(id) {
   ${state.lib.kid_mode ? "" : fixBlock(s.title_fr, "tv", s.folders?.[0])}`;
 }
 
+function seriesPlayLabel(s) {
+  const ep = nextEpisode(s);
+  if (!ep) return t("▶ Lire");
+  const anyProgress = Object.keys(state.progress || {}).some(p =>
+    (s.seasons || []).some(se => (se.episodes || []).some(e => (e.files || []).some(f => f.path === p))));
+  const num = `S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}`;
+  return `${anyProgress ? t("▶ Reprendre") : "▶ " + t("Commencer")} ${num}`;
+}
+
 function epRow(ep) {
   const f = (ep.files || [])[0];
   if (!f) return "";
   const dup = (ep.files || []).length > 1;
-  return `<div class="eprow" data-path="${esc(f.path)}" data-parts="[]">
-    <span class="epnum">S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}</span>
+  const p = progFor(f.path);
+  const watched = p?.watched;
+  const pct = p && !watched && p.duration > 0 ? Math.round(100 * p.position / p.duration) : 0;
+  return `<div class="eprow ${watched ? "watched" : ""}" data-path="${esc(f.path)}" data-parts="[]">
+    <span class="epnum">${watched ? "✓" : ""} S${String(ep.season).padStart(2, "0")}E${String(ep.episode).padStart(2, "0")}</span>
     <div style="flex:1;min-width:0">
       <div class="epname">${esc(ep.name_fr || t("Épisode") + " " + ep.episode)} ${badgeHTML(f.lang_badge)} ${dup ? `<span class="badge warn">×${ep.files.length}</span>` : ""}</div>
       ${ep.overview_fr ? `<div class="epover">${esc(ep.overview_fr)}</div>` : ""}
+      ${pct >= 2 && pct <= 95 ? `<div class="progressbar" style="max-width:220px;margin-top:5px"><div style="width:${pct}%"></div></div>` : ""}
     </div>
     ${(f.external_subs || []).length ? `<select title="${t("Sous-titres")}">
         <option value="">${t("ST : aucun")}</option>
         ${f.external_subs.map(s => `<option value="${esc(s.path)}">${esc((s.lang || "?").toUpperCase())} ${esc(s.path.split("/").pop().slice(0, 40))}</option>`).join("")}
       </select>` : ""}
+    <button class="ghost" style="padding:5px 10px" onclick="_toggleWatched(this, event)" title="${watched ? t("Marquer comme non vu") : t("Marquer comme vu")}">${watched ? "↺" : "✓"}</button>
     <button class="play" onclick="_playVersion(this)">▶</button>
   </div>`;
 }
+
+window._toggleWatched = (btn, ev) => {
+  ev.stopPropagation();
+  const path = btn.closest("[data-path]").dataset.path;
+  const cur = progFor(path)?.watched;
+  saveProgress(path, 0, progFor(path)?.duration || 0, !cur);
+  render();
+};
 
 /* ---------- doublons ---------- */
 
@@ -983,6 +1341,19 @@ async function renderSettings() {
     </div>
   </div>
 
+  <div class="block">
+    <h2>📺 ${t("Accès depuis la TV et les tablettes (réseau local)")}</h2>
+    <p class="help">${t("Quand cette option est activée, la bibliothèque est accessible depuis les appareils de votre réseau Wi-Fi (TV connectée, tablette, téléphone) à l'adresse ci-dessous. Redémarrez l'application après le changement.")}
+    ${t("⚠ Réservez cette option à votre réseau domestique.")}</p>
+    <div class="field" style="align-items:center">
+      <div class="agepick">
+        <button class="${!cfg.lan_mode ? "sel" : ""}" onclick="_setLan(false)">${t("Désactivé")}</button>
+        <button class="${cfg.lan_mode ? "sel" : ""}" onclick="_setLan(true)">${t("Activé")}</button>
+      </div>
+      ${cfg.lan_mode && cfg.lan_ip ? `<span class="help">${t("Adresse pour la TV :")} <code>http://${esc(cfg.lan_ip)}:${location.port || 80}</code></span>` : ""}
+    </div>
+  </div>
+
   ${kidSettingsBlock()}
 
   ${reviewMovies.length || reviewSeries.length ? `<div class="block">
@@ -1041,6 +1412,15 @@ window._setUILang = async (l) => {
   state.lib.ui_lang = l;
   updateChrome();
   render();
+};
+
+window._setLan = async (on) => {
+  try {
+    await api("/api/config", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lan_mode: on }) });
+    toast("✓ — " + t("Redémarrez l'application pour appliquer."), 5000);
+    renderSettings();
+  } catch (e) { toast(e.message, 5000); }
 };
 
 window._setMetaLang = async (m) => {

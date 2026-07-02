@@ -249,6 +249,70 @@ tr.del td:first-child { border-left: 3px solid var(--accent2); }
 .empty { text-align: center; color: var(--muted); padding: 70px 20px; font-size: 15px; }
 .empty .big { font-size: 44px; margin-bottom: 14px; }
 
+/* --- accueil façon Netflix --- */
+.hero {
+  position: relative; border-radius: 16px; overflow: hidden;
+  background-size: cover; background-position: center 22%;
+  min-height: 340px; margin-bottom: 26px; display: flex; align-items: flex-end;
+}
+.hero-shade {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(13,15,20,.96) 8%, rgba(13,15,20,.45) 55%, rgba(13,15,20,.15));
+}
+.hero-content { position: relative; padding: 26px 30px; max-width: 640px; }
+.hero-content h1 { font-size: 34px; text-shadow: 0 2px 12px rgba(0,0,0,.7); }
+.hero-overview { font-size: 14px; color: #d8d5d0; line-height: 1.5; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+
+.rowtitle { font-size: 18px; margin: 4px 0 12px; }
+.row {
+  display: flex; gap: 14px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+.rowcard { flex: 0 0 138px; cursor: pointer; transition: transform .15s; }
+.rowcard:hover { transform: translateY(-4px); }
+.rowcard .title { font-size: 12.5px; margin-top: 6px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+.progressbar {
+  height: 4px; background: #333a; border-radius: 2px; overflow: hidden; margin-top: 6px;
+}
+.progressbar div { height: 100%; background: var(--accent2); }
+
+/* bouton lecture au survol des cartes */
+.card .hoverplay {
+  position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%) scale(.8);
+  z-index: 5; width: 54px; height: 54px; border-radius: 50%; border: 0;
+  background: rgba(224,164,55,.95); color: #14100a; font-size: 21px; cursor: pointer;
+  opacity: 0; transition: opacity .15s, transform .15s;
+  box-shadow: 0 4px 20px rgba(0,0,0,.6);
+}
+.card:hover .hoverplay { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.card .hoverplay:hover { filter: brightness(1.15); }
+
+/* épisodes vus */
+.eprow.watched { opacity: .55; }
+.eprow.watched .epnum { color: #66bb6a; }
+
+/* --- lecteur intégré --- */
+.player-back {
+  position: fixed; inset: 0; background: #000; z-index: 300;
+  display: flex; flex-direction: column;
+}
+.player-top {
+  display: flex; align-items: center; gap: 12px; padding: 12px 18px;
+  background: linear-gradient(to bottom, rgba(0,0,0,.85), transparent);
+  position: absolute; top: 0; left: 0; right: 0; z-index: 310;
+  opacity: 0; transition: opacity .25s;
+}
+.player-back:hover .player-top { opacity: 1; }
+.player-title { font-size: 15px; font-weight: 600; color: #fff; }
+.player-top select { background: #1e2230; color: #fff; border: 1px solid #2b3047; border-radius: 6px; padding: 6px 9px; font-size: 12.5px; max-width: 300px; }
+#player-video { width: 100%; height: 100%; object-fit: contain; }
+#player-video::cue { background: rgba(0,0,0,.75); font-size: 1.05em; }
+#player-error {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px; color: var(--fg); font-size: 16px;
+}
+
 @media (max-width: 700px) {
   .detail-inner { flex-direction: column; }
   .detail-inner img.poster { width: 160px; }
