@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -341,13 +342,26 @@ func (s *Server) handleConfigGet(w http.ResponseWriter, r *http.Request) {
 		"data_dir":        s.Paths.DataDir,
 		"metadata_lang":   s.cfg.MetadataLang,
 		"ui_lang":         s.cfg.UILang,
+		"lan_mode":        s.cfg.LanMode,
+		"lan_ip":          localIP(),
 	})
+}
+
+// localIP retourne l'adresse IP locale sortante (pour afficher l'URL TV).
+func localIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return ""
+	}
+	defer conn.Close()
+	return conn.LocalAddr().(*net.UDPAddr).IP.String()
 }
 
 type configRequest struct {
 	TmdbAPIKey   string `json:"tmdb_api_key"`
 	MetadataLang string `json:"metadata_lang"`
 	UILang       string `json:"ui_lang"`
+	LanMode      *bool  `json:"lan_mode"`
 }
 
 func (s *Server) handleConfigSet(w http.ResponseWriter, r *http.Request) {
@@ -375,6 +389,9 @@ func (s *Server) handleConfigSet(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.UILang == "fr" || req.UILang == "en" {
 		s.cfg.UILang = req.UILang
+	}
+	if req.LanMode != nil {
+		s.cfg.LanMode = *req.LanMode
 	}
 	err := config.Save(s.cfg, s.Paths.ConfigFile())
 	s.mu.Unlock()

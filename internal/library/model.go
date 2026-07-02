@@ -50,6 +50,7 @@ type Version struct {
 	IsISO        bool          `json:"is_iso,omitempty"`
 	Edition      string        `json:"edition,omitempty"`
 	RawName      string        `json:"raw_name"`
+	AddedAt      int64         `json:"added_at,omitempty"` // date du fichier (unix)
 	Probed       bool          `json:"probed,omitempty"` // pistes analysées par ffprobe
 }
 

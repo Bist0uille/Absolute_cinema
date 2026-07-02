@@ -144,6 +144,7 @@ func makeVersion(f *scanner.FileEntry) *library.Version {
 		IsISO:        f.Parsed.IsISO,
 		Edition:      f.Parsed.Edition,
 		RawName:      f.RawName,
+		AddedAt:      f.ModTime,
 	}
 }
 

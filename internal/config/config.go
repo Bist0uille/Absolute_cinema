@@ -17,6 +17,7 @@ type Config struct {
 	Port         int    `json:"port"`          // 0 = auto (8484+)
 	MetadataLang string `json:"metadata_lang"` // "fr-FR" (défaut) ou "en-US"
 	UILang       string `json:"ui_lang"`       // "fr" (défaut) ou "en"
+	LanMode      bool   `json:"lan_mode"`      // écouter sur le réseau local (TV, tablettes)
 
 	// Mode enfant : bibliothèque filtrée par âge, verrouillée par code PIN.
 	KidMode    bool   `json:"kid_mode"`

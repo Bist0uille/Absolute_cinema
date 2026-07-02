@@ -19,6 +19,7 @@ import (
 type FileEntry struct {
 	RelPath      string // relatif au mediaRoot, séparateur /
 	Size         int64
+	ModTime      int64 // unix, date d'ajout du fichier
 	RawName      string
 	Container    string
 	Parsed       parse.Parsed // meilleure analyse (fichier vs dossier)
@@ -97,6 +98,7 @@ type dirContent struct {
 type videoFile struct {
 	relPath string
 	size    int64
+	modTime int64
 }
 
 // collectDirs regroupe vidéos et sous-titres par dossier sous root (relatif au mediaRoot).
@@ -150,7 +152,7 @@ func collectDirs(mediaRoot, root string, skipped *[]string) (map[string]*dirCont
 			dc = &dirContent{}
 			dirs[dir] = dc
 		}
-		dc.videos = append(dc.videos, videoFile{relPath: rel, size: info.Size()})
+		dc.videos = append(dc.videos, videoFile{relPath: rel, size: info.Size(), modTime: info.ModTime().Unix()})
 		return nil
 	})
 	return dirs, err
@@ -266,6 +268,7 @@ func buildEntries(mediaRoot, rootDir, dir string, dc *dirContent, fromFilms bool
 		e := &FileEntry{
 			RelPath:   v.relPath,
 			Size:      v.size,
+			ModTime:   v.modTime,
 			RawName:   base,
 			Container: strings.TrimPrefix(strings.ToLower(path.Ext(base)), "."),
 			Parsed:    chosen,

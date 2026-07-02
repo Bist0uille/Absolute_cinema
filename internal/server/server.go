@@ -118,17 +118,29 @@ func (s *Server) StartScan() bool {
 }
 
 // Listen ouvre le premier port libre à partir de preferred (8484 par défaut).
-func Listen(preferred int) (net.Listener, int, error) {
+// En mode LAN, écoute sur toutes les interfaces (TV, tablettes du foyer).
+func Listen(preferred int, lan bool) (net.Listener, int, error) {
 	if preferred == 0 {
 		preferred = 8484
 	}
+	host := "127.0.0.1"
+	if lan {
+		host = "0.0.0.0"
+	}
 	for p := preferred; p < preferred+20; p++ {
-		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", p))
+		ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, p))
 		if err == nil {
 			return ln, p, nil
 		}
 	}
 	return nil, 0, fmt.Errorf("aucun port libre entre %d et %d", preferred, preferred+19)
+}
+
+// LanMode indique si l'écoute réseau local est activée dans la config.
+func (s *Server) LanMode() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.cfg.LanMode
 }
 
 // Handler construit le routeur HTTP complet.
@@ -154,6 +166,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/tmdb/search", s.handleTmdbSearch)
 	mux.HandleFunc("POST /api/kidmode", s.handleKidMode)
 	mux.HandleFunc("POST /api/rating", s.handleRating)
+	mux.HandleFunc("GET /media/stream", s.handleStream)
+	mux.HandleFunc("GET /media/subtitle", s.handleSubtitle)
+	mux.HandleFunc("GET /api/progress", s.handleProgressGet)
+	mux.HandleFunc("POST /api/progress", s.handleProgressSet)
 
 	return mux
 }

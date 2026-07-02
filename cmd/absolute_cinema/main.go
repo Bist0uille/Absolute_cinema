@@ -57,14 +57,15 @@ func main() {
 		log.Fatalf("démarrage : %v", err)
 	}
 
-	ln, port, err := server.Listen(*portFlag)
+	ln, port, err := server.Listen(*portFlag, srv.LanMode())
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 	url := fmt.Sprintf("http://127.0.0.1:%d", port)
 
-	// premier lancement avec clé déjà configurée : scan automatique
-	if !srv.HasLibrary() && srv.HasKey() {
+	// scan automatique à chaque démarrage (les nouveaux fichiers apparaissent
+	// tout seuls ; tout ce qui est inchangé vient du cache, donc c'est rapide)
+	if srv.HasKey() {
 		srv.StartScan()
 	}
 
