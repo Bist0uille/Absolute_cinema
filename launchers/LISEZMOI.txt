@@ -1,0 +1,24 @@
+absolute_cinema — votre médiathèque portable
+=============================================
+
+Branchez le disque, lancez le programme de votre système, et le navigateur
+s'ouvre sur la bibliothèque. Un clic sur ▶ lance la lecture dans VLC
+(installez VLC si ce n'est pas déjà fait : https://www.videolan.org).
+
+  Windows : double-cliquez sur  « Lancer - Windows.bat »
+            (ou directement AbsoluteCinema-Windows.exe)
+
+  Mac     : double-cliquez sur  « Lancer - Mac.command »
+            Au premier lancement, macOS peut bloquer le programme :
+            clic droit sur le fichier → Ouvrir → Ouvrir.
+            Note : sur Mac, un disque NTFS est en lecture seule ; la
+            bibliothèque fonctionne mais la corbeille est désactivée.
+
+  Linux   : exécutez  « lancer-linux.sh »  (dans un terminal :
+            bash "lancer-linux.sh")
+
+Toutes les données (affiches, synopsis, corbeille, réglages) sont stockées
+sur le disque, dans le dossier caché « .absolute_cinema ». Après le premier
+scan, l'application fonctionne sans connexion internet.
+
+Si le navigateur ne s'ouvre pas tout seul : http://127.0.0.1:8484

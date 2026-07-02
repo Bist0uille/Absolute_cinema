@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La vidéothèque de poche — vos films, sur n'importe quel écran</title>
+<meta name="description" content="Un disque dur, un double-clic : votre collection de films devient une belle bibliothèque avec affiches et synopsis, sur n'importe quel ordinateur. Sans abonnement, sans compte, sans internet.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg:#0d0f14; --bg2:#151823; --bg3:#1e2230; --fg:#e8e6e3; --muted:#9a97a3; --accent:#e0a437; }
+body { font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--fg); line-height:1.6; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 22px; }
+header { padding: 70px 0 40px; text-align: center; }
+h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin-bottom: 18px; }
+h1 em { color: var(--accent); font-style: normal; }
+.sub { font-size: clamp(16px, 2.5vw, 20px); color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
+.pitch { font-size: 15px; color: var(--fg); background: var(--bg2); border: 1px solid #23273a; border-radius: 14px; padding: 22px 26px; max-width: 640px; margin: 0 auto; text-align: left; }
+.pitch b { color: var(--accent); }
+section { padding: 44px 0; }
+h2 { font-size: 26px; margin-bottom: 22px; text-align: center; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+.step { background: var(--bg2); border: 1px solid #23273a; border-radius: 14px; padding: 22px; }
+.step .n { font-size: 30px; margin-bottom: 10px; }
+.step h3 { font-size: 17px; margin-bottom: 8px; }
+.step p { color: var(--muted); font-size: 14.5px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.feat { background: var(--bg2); border-radius: 12px; padding: 16px 18px; font-size: 14.5px; }
+.feat b { display: block; margin-bottom: 4px; }
+.feat span { color: var(--muted); }
+.cta { background: linear-gradient(180deg, var(--bg2), var(--bg)); border-top: 1px solid #23273a; text-align: center; }
+form { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+input[type=email] { background: var(--bg3); border: 1px solid #2b3047; color: var(--fg); padding: 13px 18px; border-radius: 10px; font-size: 15px; width: min(340px, 90vw); outline: none; }
+input[type=email]:focus { border-color: var(--accent); }
+button { border: 0; background: var(--accent); color: #14100a; font-weight: 700; padding: 13px 26px; border-radius: 10px; font-size: 15px; cursor: pointer; }
+button:hover { filter: brightness(1.1); }
+.small { color: var(--muted); font-size: 12.5px; margin-top: 14px; }
+.demo { text-align: center; }
+.demo .placeholder { background: var(--bg2); border: 2px dashed #2b3047; border-radius: 14px; padding: 70px 20px; color: var(--muted); }
+footer { padding: 30px 0 50px; text-align: center; color: var(--muted); font-size: 12.5px; }
+footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>Vos films. N'importe quel écran.<br><em>Un simple disque dur.</em></h1>
+  <p class="sub">Branchez votre disque, double-cliquez : votre collection devient une belle bibliothèque
+  avec affiches, synopsis et sous-titres — sur n'importe quel PC, Mac ou Linux.</p>
+  <div class="pitch">
+    <b>Sans abonnement.</b> Sans compte. Sans serveur à configurer. Sans internet une fois installé.
+    Vos fichiers restent chez vous, sur votre disque — la bibliothèque voyage avec eux.
+  </div>
+</header>
+
+<section class="wrap demo">
+  <h2>La démo en 60 secondes</h2>
+  <!-- Remplacer par la vidéo : <video controls poster="capture.jpg" src="demo.mp4" style="width:100%;border-radius:14px"></video> -->
+  <div class="placeholder">🎬 Vidéo de démonstration (à venir)</div>
+</section>
+
+<section class="wrap">
+  <h2>Comment ça marche</h2>
+  <div class="steps">
+    <div class="step"><div class="n">1️⃣</div><h3>Copiez vos films</h3><p>Glissez vos fichiers vidéo sur le disque, même en vrac, même mal nommés.</p></div>
+    <div class="step"><div class="n">2️⃣</div><h3>Double-cliquez</h3><p>Le programme (déjà sur le disque) reconnaît vos films et récupère affiches, synopsis, dates, genres.</p></div>
+    <div class="step"><div class="n">3️⃣</div><h3>Regardez partout</h3><p>Branchez le disque sur n'importe quel ordinateur : votre vidéothèque s'ouvre, prête à lire.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Pensé pour les vraies collections</h2>
+  <div class="features">
+    <div class="feat"><b>🧸 Mode enfant</b><span>Un code PIN, un âge maximum : les enfants ne voient que ce qui est de leur âge.</span></div>
+    <div class="feat"><b>🔍 Il reconnaît (presque) tout</b><span>Fichiers mal nommés, trilogies en vrac, séries mélangées : plus de 99 % de reconnaissance sur une vraie collection.</span></div>
+    <div class="feat"><b>🈶 VF, VO, VOSTFR</b><span>La langue de chaque version est détectée, les sous-titres sont retrouvés et chargés.</span></div>
+    <div class="feat"><b>🧹 Chasse aux doublons</b><span>Les films en double sont repérés et comparés — vous récupérez des gigaoctets.</span></div>
+    <div class="feat"><b>📺 Films et séries</b><span>Saisons, épisodes, résumés d'épisodes en français.</span></div>
+    <div class="feat"><b>🔌 Vraiment portable</b><span>Windows, Mac, Linux. Rien à installer sur l'ordinateur hôte. Fonctionne hors ligne.</span></div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Bientôt disponible</h2>
+    <p class="sub">Laissez votre email pour être prévenu du lancement — et profiter du tarif de lancement.</p>
+    <!-- Créer un formulaire gratuit sur formspree.io puis remplacer VOTRE_ID ci-dessous -->
+    <form action="https://formspree.io/f/VOTRE_ID" method="POST">
+      <input type="email" name="email" required placeholder="votre@email.fr">
+      <button type="submit">Me prévenir</button>
+    </form>
+    <p class="small">Pas de spam : un email au lancement, c'est tout.</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>Ce logiciel organise des fichiers que vous possédez déjà. Il n'inclut, ne fournit et ne télécharge aucun film.</p>
+  <p style="margin-top:6px">Métadonnées et affiches : <a href="https://www.themoviedb.org">The Movie Database (TMDB)</a>. Ce produit utilise l'API TMDB sans être approuvé ni certifié par TMDB.</p>
+</footer>
+
+</body>
+</html>

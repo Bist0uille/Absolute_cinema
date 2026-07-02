@@ -1,0 +1,10 @@
+# Secrets — la clé TMDB ne doit JAMAIS être commitée
+.env
+
+# Binaires compilés
+dist/
+release/
+
+# Divers
+*.log
+node_modules/

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>absolute cinema</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand" onclick="location.hash='#/'">🎬 <span>absolute cinema</span></div>
+  <nav>
+    <a href="#/" data-nav="home">Bibliothèque</a>
+    <a href="#/doublons" data-nav="doublons">Doublons</a>
+    <a href="#/reglages" data-nav="reglages">Réglages</a>
+  </nav>
+  <input id="search" type="search" placeholder="Rechercher un titre…" autocomplete="off">
+  <button id="kidbtn" title="Mode enfant" onclick="_kidToggle()">🧸</button>
+</header>
+
+<div id="scanbar" class="hidden">
+  <div class="scan-label"></div>
+  <div class="scan-track"><div class="scan-fill"></div></div>
+</div>
+
+<main id="app"></main>
+
+<div id="toast" class="hidden"></div>
+<div id="modal-root"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
