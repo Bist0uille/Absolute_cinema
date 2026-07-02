@@ -61,6 +61,7 @@ func (s *Server) handleLibrary(w http.ResponseWriter, r *http.Request) {
 		"kid_mode":    s.cfg.KidMode,
 		"kid_max_age": s.cfg.KidMaxAge,
 		"has_pin":     s.cfg.KidPINHash != "",
+		"ui_lang":     s.cfg.UILang,
 	})
 }
 
@@ -302,6 +303,22 @@ func (s *Server) handleTrashRestore(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"restored": true, "note": "relancez un scan pour réintégrer le fichier à la bibliothèque"})
 }
 
+// handleTrashEmpty vide définitivement la corbeille.
+func (s *Server) handleTrashEmpty(w http.ResponseWriter, r *http.Request) {
+	if !s.requireParent(w) {
+		return
+	}
+	if s.Paths.ReadOnly {
+		writeErr(w, 403, "disque en lecture seule")
+		return
+	}
+	if err := os.RemoveAll(s.Paths.TrashDir()); err != nil {
+		writeErr(w, 500, err.Error())
+		return
+	}
+	writeJSON(w, 200, map[string]bool{"ok": true})
+}
+
 // --- Config ---
 
 func (s *Server) handleConfigGet(w http.ResponseWriter, r *http.Request) {
@@ -322,11 +339,15 @@ func (s *Server) handleConfigGet(w http.ResponseWriter, r *http.Request) {
 		"readonly":        s.Paths.ReadOnly,
 		"media_root":      s.Paths.MediaRoot,
 		"data_dir":        s.Paths.DataDir,
+		"metadata_lang":   s.cfg.MetadataLang,
+		"ui_lang":         s.cfg.UILang,
 	})
 }
 
 type configRequest struct {
-	TmdbAPIKey string `json:"tmdb_api_key"`
+	TmdbAPIKey   string `json:"tmdb_api_key"`
+	MetadataLang string `json:"metadata_lang"`
+	UILang       string `json:"ui_lang"`
 }
 
 func (s *Server) handleConfigSet(w http.ResponseWriter, r *http.Request) {
@@ -334,17 +355,27 @@ func (s *Server) handleConfigSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req configRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || strings.TrimSpace(req.TmdbAPIKey) == "" {
-		writeErr(w, 400, "clé manquante")
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, 400, "requête invalide")
 		return
 	}
 	key := strings.TrimSpace(req.TmdbAPIKey)
-	if err := tmdb.ValidateKey(key); err != nil {
-		writeErr(w, 400, "clé refusée par TMDB : "+err.Error())
-		return
+	if key != "" {
+		if err := tmdb.ValidateKey(key); err != nil {
+			writeErr(w, 400, "clé refusée par TMDB : "+err.Error())
+			return
+		}
 	}
 	s.mu.Lock()
-	s.cfg.TmdbAPIKey = key
+	if key != "" {
+		s.cfg.TmdbAPIKey = key
+	}
+	if req.MetadataLang == "fr-FR" || req.MetadataLang == "en-US" {
+		s.cfg.MetadataLang = req.MetadataLang
+	}
+	if req.UILang == "fr" || req.UILang == "en" {
+		s.cfg.UILang = req.UILang
+	}
 	err := config.Save(s.cfg, s.Paths.ConfigFile())
 	s.mu.Unlock()
 	if err != nil {
@@ -399,8 +430,12 @@ func (s *Server) handleTmdbSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mu.Lock()
 	key := s.cfg.TmdbAPIKey
+	metaLang := s.cfg.MetadataLang
 	s.mu.Unlock()
 	client := tmdb.New(key, s.Paths.TmdbCacheDir())
+	if metaLang != "" {
+		client.Lang = metaLang
+	}
 	var results []tmdb.SearchResult
 	var err error
 	if kind == "tv" {

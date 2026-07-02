@@ -13,8 +13,10 @@ const DataDirName = ".absolute_cinema"
 
 // Config est le contenu de config.json.
 type Config struct {
-	TmdbAPIKey string `json:"tmdb_api_key"`
-	Port       int    `json:"port"` // 0 = auto (8484+)
+	TmdbAPIKey   string `json:"tmdb_api_key"`
+	Port         int    `json:"port"`          // 0 = auto (8484+)
+	MetadataLang string `json:"metadata_lang"` // "fr-FR" (défaut) ou "en-US"
+	UILang       string `json:"ui_lang"`       // "fr" (défaut) ou "en"
 
 	// Mode enfant : bibliothèque filtrée par âge, verrouillée par code PIN.
 	KidMode    bool   `json:"kid_mode"`

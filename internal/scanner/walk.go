@@ -80,7 +80,7 @@ func DetectRoots(mediaRoot string) (films, series []string, err error) {
 		}
 		name := strings.ToLower(e.Name())
 		switch {
-		case strings.Contains(name, "série") || strings.Contains(name, "serie") || strings.Contains(name, "series") || strings.Contains(name, "tv"):
+		case strings.Contains(name, "série") || strings.Contains(name, "serie") || strings.Contains(name, "series") || strings.Contains(name, "show") || name == "tv" || strings.Contains(name, "[tv]"):
 			series = append(series, e.Name())
 		case strings.Contains(name, "film") || strings.Contains(name, "movie"):
 			films = append(films, e.Name())

@@ -8,8 +8,8 @@ GO="${GO:-$HOME/go-sdk/bin/go}"
 DEST="${1:-dist}"
 mkdir -p "$DEST"
 
-echo "→ windows/amd64"
-GOOS=windows GOARCH=amd64 "$GO" build -ldflags "-s -w" -o "$DEST/AbsoluteCinema-Windows.exe" ./cmd/absolute_cinema
+echo "→ windows/amd64 (sans console)"
+GOOS=windows GOARCH=amd64 "$GO" build -ldflags "-s -w -H=windowsgui" -o "$DEST/AbsoluteCinema-Windows.exe" ./cmd/absolute_cinema
 echo "→ darwin/arm64 (Mac Apple Silicon)"
 GOOS=darwin GOARCH=arm64 "$GO" build -ldflags "-s -w" -o "$DEST/AbsoluteCinema-Mac-AppleSilicon" ./cmd/absolute_cinema
 echo "→ darwin/amd64 (Mac Intel)"

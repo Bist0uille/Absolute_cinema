@@ -99,7 +99,7 @@ func buildMovies(lib *library.Library, files []*scanner.FileEntry, client *tmdb.
 			Versions:        []*library.Version{v},
 		}
 		// détails (genres, durée, synopsis fr complet, classification)
-		if d, err := client.MovieDetails(match.ID, "fr-FR"); err == nil {
+		if d, err := client.MovieDetails(match.ID, client.Lang); err == nil {
 			movie.Title = or(d.Title, movie.Title)
 			movie.OriginalTitle = or(d.OriginalTitle, movie.OriginalTitle)
 			movie.Overview = or(d.Overview, movie.Overview)
@@ -163,7 +163,7 @@ func dedupSubs(subs []library.ExternalSub) []library.ExternalSub {
 // résultat avec son score de confiance.
 func matchMovie(f *scanner.FileEntry, client *tmdb.Client, overrides map[string]Override) (*tmdb.SearchResult, float64) {
 	if ov := findOverride(overrides, f.RelPath); ov != nil && ov.MediaType == "movie" {
-		if d, err := client.MovieDetails(ov.TmdbID, "fr-FR"); err == nil {
+		if d, err := client.MovieDetails(ov.TmdbID, client.Lang); err == nil {
 			return &tmdb.SearchResult{
 				ID: d.ID, Title: d.Title, OriginalTitle: d.OriginalTitle,
 				ReleaseDate: d.ReleaseDate, Overview: d.Overview,
@@ -385,7 +385,7 @@ func buildSeries(lib *library.Library, files []*scanner.FileEntry, client *tmdb.
 				VoteAverage:     match.VoteAverage,
 				AgeRating:       -1,
 			}
-			if d, err := client.TVDetails(match.ID, "fr-FR"); err == nil {
+			if d, err := client.TVDetails(match.ID, client.Lang); err == nil {
 				s.Title = or(d.Name, s.Title)
 				s.Overview = or(d.Overview, s.Overview)
 				s.VoteAverage = d.VoteAverage
@@ -432,7 +432,7 @@ func buildSeries(lib *library.Library, files []*scanner.FileEntry, client *tmdb.
 
 func matchTV(title, relPath string, client *tmdb.Client, overrides map[string]Override) (*tmdb.SearchResult, float64) {
 	if ov := findOverride(overrides, relPath); ov != nil && ov.MediaType == "tv" {
-		if d, err := client.TVDetails(ov.TmdbID, "fr-FR"); err == nil {
+		if d, err := client.TVDetails(ov.TmdbID, client.Lang); err == nil {
 			return &tmdb.SearchResult{
 				ID: d.ID, Name: d.Name, OriginalName: d.OriginalName,
 				FirstAirDate: d.FirstAirDate, Overview: d.Overview,

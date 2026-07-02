@@ -9,6 +9,8 @@ configurer, et sans internet une fois le premier scan terminé.
 
 **➡ Site & démo : https://bist0uille.github.io/Absolute_cinema/**
 
+*English version: [README.en.md](README.en.md)*
+
 ## Fonctionnalités
 
 - 🔍 **Reconnaissance automatique** des films et séries, même mal nommés (plus de 99 % de

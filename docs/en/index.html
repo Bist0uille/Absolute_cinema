@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Absolute Cinema — the pocket movie library</title>
+<meta name="description" content="One hard drive, one double-click: your movie collection becomes a beautiful library with posters and synopses, on any computer. No subscription, no account, no internet.">
+<meta property="og:title" content="Absolute Cinema — the pocket movie library">
+<meta property="og:description" content="Your movies, on any screen, with a plain hard drive. No subscription, no account, no internet.">
+<meta property="og:image" content="https://bist0uille.github.io/Absolute_cinema/img/grille.jpg">
+<link rel="alternate" hreflang="fr" href="https://bist0uille.github.io/Absolute_cinema/">
+<link rel="alternate" hreflang="en" href="https://bist0uille.github.io/Absolute_cinema/en/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg:#0d0f14; --bg2:#151823; --bg3:#1e2230; --fg:#e8e6e3; --muted:#9a97a3; --accent:#e0a437; }
+body { font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--fg); line-height:1.6; }
+.wrap { max-width: 940px; margin: 0 auto; padding: 0 22px; }
+.langsw { text-align: right; padding: 14px 22px 0; }
+.langsw a { color: var(--muted); text-decoration: none; font-size: 13.5px; }
+.langsw a:hover { color: var(--accent); }
+header { padding: 40px 0 34px; text-align: center; }
+h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin-bottom: 18px; }
+h1 em { color: var(--accent); font-style: normal; }
+.sub { font-size: clamp(16px, 2.5vw, 20px); color: var(--muted); max-width: 660px; margin: 0 auto 26px; }
+.pitch { font-size: 15px; background: var(--bg2); border: 1px solid #23273a; border-radius: 14px; padding: 20px 26px; max-width: 660px; margin: 0 auto; text-align: left; }
+.pitch b { color: var(--accent); }
+section { padding: 40px 0; }
+h2 { font-size: 26px; margin-bottom: 22px; text-align: center; }
+video { width: 100%; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.55); display: block; }
+.vidnote { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 8px; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+.step { background: var(--bg2); border: 1px solid #23273a; border-radius: 14px; padding: 22px; }
+.step .n { font-size: 30px; margin-bottom: 10px; }
+.step h3 { font-size: 17px; margin-bottom: 8px; }
+.step p { color: var(--muted); font-size: 14.5px; }
+.gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.gallery figure { margin: 0; }
+.gallery img { width: 100%; border-radius: 10px; border: 1px solid #23273a; display: block; }
+.gallery figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; text-align: center; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.feat { background: var(--bg2); border-radius: 12px; padding: 16px 18px; font-size: 14.5px; }
+.feat b { display: block; margin-bottom: 4px; }
+.feat span { color: var(--muted); }
+.dl { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 22px 0 8px; }
+.dl a { display: inline-block; background: var(--accent); color: #14100a; font-weight: 700; padding: 13px 22px; border-radius: 10px; text-decoration: none; font-size: 15px; }
+.dl a.alt { background: var(--bg3); color: var(--fg); border: 1px solid #2b3047; }
+.dl a:hover { filter: brightness(1.12); }
+.note { color: var(--muted); font-size: 13.5px; text-align: center; max-width: 620px; margin: 0 auto; }
+.note a { color: var(--accent); }
+.cta { background: linear-gradient(180deg, var(--bg2), var(--bg)); border-top: 1px solid #23273a; text-align: center; }
+form { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+input[type=email] { background: var(--bg3); border: 1px solid #2b3047; color: var(--fg); padding: 13px 18px; border-radius: 10px; font-size: 15px; width: min(340px, 90vw); outline: none; }
+input[type=email]:focus { border-color: var(--accent); }
+button { border: 0; background: var(--accent); color: #14100a; font-weight: 700; padding: 13px 26px; border-radius: 10px; font-size: 15px; cursor: pointer; }
+button:hover { filter: brightness(1.1); }
+.small { color: var(--muted); font-size: 12.5px; margin-top: 14px; }
+footer { padding: 30px 0 50px; text-align: center; color: var(--muted); font-size: 12.5px; }
+footer a { color: var(--muted); }
+@media (max-width: 640px) { .gallery { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="langsw"><a href="../">🇫🇷 Version française</a></div>
+
+<header class="wrap">
+  <h1>Your movies. Any screen.<br><em>A plain hard drive.</em></h1>
+  <p class="sub">Plug in your drive, double-click: your collection becomes a beautiful library
+  with posters, synopses and subtitles — on any Windows, Mac or Linux computer.</p>
+  <div class="pitch">
+    <b>No subscription.</b> No account. No server to set up. No internet once installed.
+    Your files stay with you, on your drive — the library travels with them.
+  </div>
+</header>
+
+<section class="wrap">
+  <video controls preload="metadata" poster="../img/poster.jpg">
+    <source src="../demo.mp4" type="video/mp4">
+    Your browser cannot play the video — <a href="../demo.mp4">download it</a>.
+  </video>
+  <p class="vidnote">Demo captions are in French — the app itself is fully bilingual (English/French).</p>
+</section>
+
+<section class="wrap" id="download">
+  <h2>Try the free beta</h2>
+  <div class="dl">
+    <a href="https://github.com/Bist0uille/Absolute_cinema/releases/latest/download/AbsoluteCinema-Windows.zip">⬇ Windows</a>
+    <a class="alt" href="https://github.com/Bist0uille/Absolute_cinema/releases/latest/download/AbsoluteCinema-Mac.zip">⬇ macOS</a>
+    <a class="alt" href="https://github.com/Bist0uille/Absolute_cinema/releases/latest/download/AbsoluteCinema-Linux.zip">⬇ Linux</a>
+  </div>
+  <p class="note">Unzip at the root of your movie hard drive, next to your movie folders
+  (e.g. <code>[Movies]</code> and <code>[Shows]</code> — any name containing “movies”/“films” or “series”/“shows” works),
+  then double-click. You'll need a free <a href="https://www.themoviedb.org/settings/api">TMDB key</a>
+  (2 min, guided in the app) and <a href="https://www.videolan.org">VLC</a> for playback.
+  Open source on <a href="https://github.com/Bist0uille/Absolute_cinema">GitHub</a>.</p>
+</section>
+
+<section class="wrap">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><div class="n">1️⃣</div><h3>Copy your movies</h3><p>Drop your video files on the drive — even messy, even badly named.</p></div>
+    <div class="step"><div class="n">2️⃣</div><h3>Double-click</h3><p>The app (sitting on the drive) recognizes your movies and fetches posters, synopses, dates, genres.</p></div>
+    <div class="step"><div class="n">3️⃣</div><h3>Watch anywhere</h3><p>Plug the drive into any computer: your library opens, ready to play.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Screenshots</h2>
+  <div class="gallery">
+    <figure><img src="../img/grille.jpg" alt="The library: a poster grid with language and age badges" loading="lazy"><figcaption>Your whole collection, recognized automatically</figcaption></figure>
+    <figure><img src="../img/fiche.jpg" alt="A movie page: synopsis, rating, one-click playback" loading="lazy"><figcaption>Movie page: synopsis, rating, ▶ plays in VLC</figcaption></figure>
+    <figure><img src="../img/serie.jpg" alt="A TV show with its seasons and episodes" loading="lazy"><figcaption>TV shows: seasons and episodes</figcaption></figure>
+    <figure><img src="../img/enfant.jpg" alt="Kids mode, locked with a PIN code" loading="lazy"><figcaption>Kids mode, locked with a PIN code</figcaption></figure>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Built for real collections</h2>
+  <div class="features">
+    <div class="feat"><b>🔍 It recognizes (almost) everything</b><span>Badly named files, loose trilogies, mixed-up shows: over 99% recognition measured on a real collection.</span></div>
+    <div class="feat"><b>🧸 Kids mode</b><span>A PIN code and a maximum age: kids only see age-appropriate titles (official movie ratings).</span></div>
+    <div class="feat"><b>🈶 Languages & subtitles</b><span>Audio language detection, external subtitles found and loaded automatically.</span></div>
+    <div class="feat"><b>🧹 Duplicate hunting</b><span>Duplicate movies are spotted and compared — reclaim gigabytes.</span></div>
+    <div class="feat"><b>📺 Movies and TV shows</b><span>Seasons, episodes, episode summaries.</span></div>
+    <div class="feat"><b>🔌 Truly portable</b><span>Windows, Mac, Linux. Nothing to install on the host computer. Works offline.</span></div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Get notified about the final release</h2>
+    <p class="sub">The beta is free. Leave your email for what's next — and the launch price.</p>
+    <form action="https://formspree.io/f/mdarppnn" method="POST">
+      <input type="email" name="email" required placeholder="you@email.com">
+      <button type="submit">Notify me</button>
+    </form>
+    <p class="small">No spam: a few emails a year, at most.</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>This software organizes files you already own. It does not include, provide or download any movie.</p>
+  <p style="margin-top:6px">Metadata and artwork: <a href="https://www.themoviedb.org">The Movie Database (TMDB)</a>. This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+  <p style="margin-top:6px"><a href="https://github.com/Bist0uille/Absolute_cinema">Source code (GPL-3.0)</a></p>
+</footer>
+
+</body>
+</html>

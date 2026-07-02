@@ -29,6 +29,7 @@ var ErrNoKey = errors.New("clé API TMDB manquante")
 type Client struct {
 	APIKey   string
 	CacheDir string
+	Lang     string // langue des métadonnées ("fr-FR" par défaut)
 	HTTP     *http.Client
 	throttle <-chan time.Time
 }
@@ -37,6 +38,7 @@ func New(apiKey, cacheDir string) *Client {
 	return &Client{
 		APIKey:   apiKey,
 		CacheDir: cacheDir,
+		Lang:     "fr-FR",
 		HTTP:     &http.Client{Timeout: 30 * time.Second},
 		throttle: time.Tick(250 * time.Millisecond), // ~4 req/s
 	}
@@ -357,7 +359,7 @@ type SeasonDetails struct {
 // --- Appels ---
 
 func (c *Client) SearchMovie(query string, year int) ([]SearchResult, error) {
-	p := url.Values{"query": {query}, "language": {"fr-FR"}, "include_adult": {"true"}}
+	p := url.Values{"query": {query}, "language": {c.Lang}, "include_adult": {"true"}}
 	if year > 0 {
 		p.Set("year", strconv.Itoa(year))
 	}
@@ -367,14 +369,14 @@ func (c *Client) SearchMovie(query string, year int) ([]SearchResult, error) {
 }
 
 func (c *Client) SearchTV(query string) ([]SearchResult, error) {
-	p := url.Values{"query": {query}, "language": {"fr-FR"}, "include_adult": {"true"}}
+	p := url.Values{"query": {query}, "language": {c.Lang}, "include_adult": {"true"}}
 	var r searchResponse
 	err := c.get("/search/tv", p, &r)
 	return r.Results, err
 }
 
 func (c *Client) SearchMulti(query string) ([]SearchResult, error) {
-	p := url.Values{"query": {query}, "language": {"fr-FR"}, "include_adult": {"true"}}
+	p := url.Values{"query": {query}, "language": {c.Lang}, "include_adult": {"true"}}
 	var r searchResponse
 	err := c.get("/search/multi", p, &r)
 	return r.Results, err
@@ -394,6 +396,6 @@ func (c *Client) TVDetails(id int, lang string) (*TVDetails, error) {
 
 func (c *Client) SeasonDetails(tvID, season int) (*SeasonDetails, error) {
 	var d SeasonDetails
-	err := c.get(fmt.Sprintf("/tv/%d/season/%d", tvID, season), url.Values{"language": {"fr-FR"}}, &d)
+	err := c.get(fmt.Sprintf("/tv/%d/season/%d", tvID, season), url.Values{"language": {c.Lang}}, &d)
 	return &d, err
 }

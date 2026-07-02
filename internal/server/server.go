@@ -82,6 +82,7 @@ func (s *Server) StartScan() bool {
 	}
 	s.scan = ScanState{Scanning: true, Phase: "walk"}
 	apiKey := s.cfg.TmdbAPIKey
+	metaLang := s.cfg.MetadataLang
 	overrides := make(map[string]catalog.Override, len(s.overrides))
 	for k, v := range s.overrides {
 		overrides[k] = v
@@ -90,6 +91,9 @@ func (s *Server) StartScan() bool {
 
 	go func() {
 		client := tmdb.New(apiKey, s.Paths.TmdbCacheDir())
+		if metaLang != "" {
+			client.Lang = metaLang
+		}
 		lib, err := catalog.Build(s.Paths.MediaRoot, s.Paths.DataDir, client, overrides, func(phase string, done, total int, current string) {
 			s.mu.Lock()
 			s.scan.Phase, s.scan.Done, s.scan.Total, s.scan.Current = phase, done, total, current
@@ -143,6 +147,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/trash", s.handleTrash)
 	mux.HandleFunc("GET /api/trash", s.handleTrashList)
 	mux.HandleFunc("POST /api/trash/restore", s.handleTrashRestore)
+	mux.HandleFunc("POST /api/trash/empty", s.handleTrashEmpty)
 	mux.HandleFunc("GET /api/config", s.handleConfigGet)
 	mux.HandleFunc("POST /api/config", s.handleConfigSet)
 	mux.HandleFunc("POST /api/override", s.handleOverride)

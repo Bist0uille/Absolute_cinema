@@ -68,3 +68,45 @@ Où poster (France) : groupes Facebook « Home Cinéma France », « Plex France
 | Contacts Leboncoin sérieux | | ≥ 3 |
 | Entretiens réalisés | | 10 |
 | Verdict entretiens (paieraient ?) | | majorité oui |
+
+---
+
+## Posts anglophones (marché « réfugiés Plex », fenêtre 2026)
+
+### r/selfhosted ou r/DataHoarder (titre + corps)
+
+**Title:** I built a "pocket media library" — a single binary that lives ON the external drive (no server, no account, works offline)
+
+> Plex tripling its lifetime price got me thinking about the opposite approach:
+> instead of a server, the library lives on the drive itself.
+>
+> You drop a single binary at the root of your external drive, double-click on any
+> Windows/Mac/Linux machine, and your movie collection opens in the browser with
+> posters, synopses, subtitles, a PIN-locked kids mode and duplicate detection.
+> All metadata is cached on the drive, so after the first scan it works fully
+> offline. Nothing gets installed on the host computer.
+>
+> Free beta, open source (Go, GPL-3.0, zero dependencies): [site] / [github]
+> It measured 99%+ recognition on my own messy 1000-file collection. I'd love to
+> know how it handles yours — feedback and issues very welcome.
+
+Règles Reddit : lire les règles d'autopromo de chaque sub (r/selfhosted a un fil
+« What are you working on » hebdo qui est l'endroit idéal) ; répondre à tous les
+commentaires ; ne JAMAIS mentionner de sources de films.
+
+### Hacker News (Show HN)
+
+**Title:** Show HN: A movie library that lives on the hard drive itself (Go, offline, no server)
+
+> Premier commentaire (à poster soi-même) : expliquer la genèse (une vraie collection
+> familiale en désordre), l'architecture (binaire unique go:embed, chemins relatifs
+> pour la portabilité, cache TMDB intégral pour l'offline), et le choix GPL.
+> Les threads HN aiment les détails techniques honnêtes et les limites assumées
+> (pas de transcodage, VLC requis, pas de streaming distant).
+
+### Où poster, dans l'ordre
+
+1. r/selfhosted (fil hebdo) — jour 1
+2. r/DataHoarder — jour 3
+3. Show HN — jour 7 (avec la version EN au point et 2-3 retours déjà intégrés)
+4. Forums Jellyfin/Kodi (sections « alternatives/outils ») — au fil de l'eau
