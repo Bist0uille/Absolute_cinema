@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.3.0-beta — 2026-07-03
+
+- **Built-in player**: movies and episodes now play inside the app (h264 mp4/mkv,
+  webm), with subtitles (on-the-fly SRT→VTT conversion, encoding repair), and a
+  one-click "Play in VLC" fallback for exotic formats (avi, x265, ISO)
+- **Resume playback**: positions are saved on the drive itself — pause on one
+  computer, resume on another; episodes are marked watched at 92%
+- **Netflix-style home**: hero banner, "Resume" row with progress bars,
+  "Recently added" row
+- **One-click play**: ▶ on poster hover, big Play/Resume button on detail pages,
+  TV shows start/resume the next unwatched episode automatically
+- **Auto-scan on every launch**: new files appear by themselves
+- **TV & tablets (local network)**: opt-in setting exposing the library to your
+  home Wi-Fi devices, with the TV address displayed
+
 ## v1.2.0-beta — 2026-07-03
 
 - **English support**: fully bilingual interface (auto-detected, switchable in
