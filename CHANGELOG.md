@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.2-beta — 2026-07-03
+
+- New brand identity: golden cinema-ticket logo (app top bar, favicon, website,
+  demo video) and proper capitalization of the name — Absolute Cinema
+
 ## v1.3.1-beta — 2026-07-03
 
 - Safety guard: the automatic startup scan no longer degrades a good library

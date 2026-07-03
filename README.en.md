@@ -1,4 +1,4 @@
-# 🎬 Absolute Cinema — the pocket movie library
+# <img src="docs/img/logo.svg" height="30" alt=""> Absolute Cinema — the pocket movie library
 
 **Your movies, on any screen, with a plain hard drive.**
 

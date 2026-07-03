@@ -1,4 +1,4 @@
-# 🎬 Absolute Cinema — la vidéothèque de poche
+# <img src="docs/img/logo.svg" height="30" alt=""> Absolute Cinema — la vidéothèque de poche
 
 **Vos films, sur n'importe quel écran, avec un simple disque dur.**
 

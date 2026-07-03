@@ -28,8 +28,9 @@ body {
   background: rgba(13,15,20,.92); backdrop-filter: blur(8px);
   border-bottom: 1px solid #23273a;
 }
-.brand { font-size: 20px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.brand { font-size: 20px; font-weight: 700; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 9px; }
 .brand span { letter-spacing: .5px; }
+.brand .logo { flex: 0 0 auto; }
 #topbar nav { display: flex; gap: 4px; }
 #topbar nav a {
   color: var(--muted); text-decoration: none; padding: 7px 14px;

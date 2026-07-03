@@ -1,7 +1,7 @@
 /* absolute_cinema — interface (vanilla JS, routing par hash) */
 "use strict";
 
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.3.2";
 const GITHUB_REPO = "Bist0uille/Absolute_cinema";
 
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -1384,7 +1384,7 @@ async function renderSettings() {
   <div class="block">
     <h2>${t("À propos")}</h2>
     <p class="help">
-      <strong>absolute cinema</strong> — version ${APP_VERSION} ·
+      <strong>Absolute Cinema</strong> — version ${APP_VERSION} ·
       <a href="https://github.com/${GITHUB_REPO}" target="_blank">GitHub</a> ·
       <a href="https://bist0uille.github.io/Absolute_cinema/" target="_blank">Site</a><br><br>
       ${state.lang === "en"
