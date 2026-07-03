@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.1-beta — 2026-07-03
+
+- Safety guard: the automatic startup scan no longer degrades a good library
+  when the network is unavailable and the TMDB cache is incomplete
+- Multi-part movies (CD1/CD2) now open in VLC (which chains the parts) instead
+  of playing only part one in the browser
+- Smoother search (debounced rendering); hover play button hidden on touch screens
+- New demo video showcasing the built-in player, resume and the new home
+
 ## v1.3.0-beta — 2026-07-03
 
 - **Built-in player**: movies and episodes now play inside the app (h264 mp4/mkv,

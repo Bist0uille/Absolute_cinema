@@ -1,7 +1,7 @@
 /* absolute_cinema — interface (vanilla JS, routing par hash) */
 "use strict";
 
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 const GITHUB_REPO = "Bist0uille/Absolute_cinema";
 
 const $ = (sel, el = document) => el.querySelector(sel);
