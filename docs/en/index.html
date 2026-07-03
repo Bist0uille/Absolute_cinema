@@ -57,15 +57,20 @@ button:hover { filter: brightness(1.1); }
 .small { color: var(--muted); font-size: 12.5px; margin-top: 14px; }
 footer { padding: 30px 0 50px; text-align: center; color: var(--muted); font-size: 12.5px; }
 footer a { color: var(--muted); }
+.sitebar { display:flex; align-items:center; gap:11px; padding:16px 24px; max-width:940px; margin:0 auto; }
+.sitebar .name { font-size:20px; font-weight:800; letter-spacing:.4px; }
+.sitebar .spacer { flex:1; }
+.sitebar a { color:#9a97a3; text-decoration:none; font-size:13.5px; }
+.sitebar a:hover { color:#e0a437; }
+
 @media (max-width: 640px) { .gallery { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
-<div class="langsw"><a href="../">🇫🇷 Version française</a></div>
+<div class="sitebar"><svg viewBox="0 0 120 100" width="34" height="28" aria-hidden="true"><g transform="rotate(-6 60 58)"><path d="M14 32 h92 a8 8 0 0 0 0 16 v20 a8 8 0 0 0 0 16 h-92 a8 8 0 0 0 0 -16 v-20 a8 8 0 0 0 0 -16 Z" fill="#e0a437"/><path d="M44 46 L64 58 L44 70 Z" fill="#0d0f14"/><line x1="76" y1="40" x2="76" y2="76" stroke="#0d0f14" stroke-width="3.5" stroke-dasharray="5 5"/><circle cx="90" cy="52" r="3.4" fill="#0d0f14"/><circle cx="90" cy="64" r="3.4" fill="#0d0f14"/></g></svg><span class="name">Absolute Cinema</span><span class="spacer"></span><a href="../">🇫🇷 Version française</a></div>
 
 <header class="wrap">
-  <img src="../img/logo.svg" alt="" width="86" style="margin-bottom:14px">
   <h1>Your movies. Any screen.<br><em>A plain hard drive.</em></h1>
   <p class="sub">Plug in your drive, double-click: your collection becomes a beautiful library
   with posters, synopses and subtitles — on any Windows, Mac or Linux computer.</p>
