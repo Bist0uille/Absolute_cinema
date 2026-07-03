@@ -106,6 +106,17 @@ func (s *Server) StartScan() bool {
 			log.Printf("scan : %v", err)
 			return
 		}
+		// garde-fou hors ligne : si beaucoup de titres auparavant reconnus
+		// basculent en « non identifiés » (cache TMDB incomplet + pas de
+		// réseau), on conserve l'ancienne bibliothèque plutôt que de la dégrader
+		oldMatched := len(s.lib.Movies) + len(s.lib.Series)
+		newMatched := len(lib.Movies) + len(lib.Series)
+		if oldMatched > 10 && newMatched < oldMatched*8/10 &&
+			len(lib.Unmatched) > len(s.lib.Unmatched)+(oldMatched-newMatched)/2 {
+			s.scan = ScanState{Phase: "done", Error: "scan partiel (réseau indisponible ?) — bibliothèque précédente conservée"}
+			log.Printf("scan dégradé ignoré : %d reconnus contre %d avant", newMatched, oldMatched)
+			return
+		}
 		s.lib = lib
 		s.applyManualRatings()
 		s.scan = ScanState{Phase: "done"}

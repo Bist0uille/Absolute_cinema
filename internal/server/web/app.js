@@ -539,8 +539,9 @@ function findVersionByPath(path) {
 }
 
 // lecture intelligente : navigateur si possible, sinon VLC
+// (les films en plusieurs parties CD1/CD2 vont à VLC, qui les enchaîne)
 function playSmart(version, subPath, title) {
-  if (canPlayInBrowser(version)) openPlayer(version, subPath, title);
+  if ((version.parts || []).length === 0 && canPlayInBrowser(version)) openPlayer(version, subPath, title);
   else play(version.path, subPath, version.parts || []);
 }
 
@@ -1518,10 +1519,14 @@ window._saveKey = async () => {
 
 /* ---------- recherche globale ---------- */
 
+let searchTimer = null;
 $("#search").addEventListener("input", e => {
-  state.search = e.target.value;
-  if (route().page !== "home") location.hash = "#/";
-  else render();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    state.search = e.target.value;
+    if (route().page !== "home") location.hash = "#/";
+    else render();
+  }, 160);
 });
 
 /* ---------- démarrage ---------- */

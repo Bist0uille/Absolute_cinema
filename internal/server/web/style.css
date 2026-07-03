@@ -287,6 +287,8 @@ tr.del td:first-child { border-left: 3px solid var(--accent2); }
 }
 .card:hover .hoverplay { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .card .hoverplay:hover { filter: brightness(1.15); }
+/* écrans tactiles (TV, tablettes) : pas de survol -> on passe par la fiche */
+@media (hover: none) { .card .hoverplay { display: none; } }
 
 /* épisodes vus */
 .eprow.watched { opacity: .55; }
