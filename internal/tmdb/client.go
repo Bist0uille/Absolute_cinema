@@ -44,6 +44,11 @@ func New(apiKey, cacheDir string) *Client {
 	}
 }
 
+// HasKey indique qu'une clé API est configurée. Sinon, le catalogue est
+// construit en « mode local » (titres depuis les noms de fichiers, sans
+// affiches ni synopsis).
+func (c *Client) HasKey() bool { return c.APIKey != "" }
+
 // get effectue GET path?params, en passant par le cache disque.
 // La clé de cache ne contient jamais la clé API.
 func (c *Client) get(path string, params url.Values, out any) error {

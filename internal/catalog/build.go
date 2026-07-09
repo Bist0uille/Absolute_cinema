@@ -60,6 +60,10 @@ func Build(mediaRoot, dataDir string, client *tmdb.Client, overrides map[string]
 // --- Films ---
 
 func buildMovies(lib *library.Library, files []*scanner.FileEntry, client *tmdb.Client, dataDir string, overrides map[string]Override, progress Progress) {
+	if !client.HasKey() {
+		buildMoviesLocal(lib, files, progress)
+		return
+	}
 	byTmdb := map[int]*library.Movie{}
 	total := len(files)
 
@@ -129,6 +133,44 @@ func buildMovies(lib *library.Library, files []*scanner.FileEntry, client *tmdb.
 		lib.Movies = append(lib.Movies, movie)
 	}
 	progress("tmdb", total, total, "")
+}
+
+// buildMoviesLocal construit les fiches films sans TMDB, à partir du seul
+// parsing des noms de fichiers (aucun appel réseau). Les fichiers d'un même
+// titre + année sont regroupés en une fiche, poster laissé vide (l'UI affiche
+// alors un placeholder).
+func buildMoviesLocal(lib *library.Library, files []*scanner.FileEntry, progress Progress) {
+	byKey := map[string]*library.Movie{}
+	total := len(files)
+	for i, f := range files {
+		progress("local", i, total, f.Parsed.Title)
+
+		title := f.Parsed.Title
+		if title == "" {
+			title = strings.TrimSpace(f.RawName)
+		}
+		key := parse.Fold(title)
+		if f.Parsed.Year > 0 {
+			key = fmt.Sprintf("%s|%d", key, f.Parsed.Year)
+		}
+
+		v := makeVersion(f)
+		if m, ok := byKey[key]; ok {
+			m.Versions = append(m.Versions, v)
+			continue
+		}
+		m := &library.Movie{
+			ID:              library.PathID("mv", f.RelPath),
+			MatchConfidence: 1, // pas de revue en mode local
+			Title:           title,
+			Year:            f.Parsed.Year,
+			AgeRating:       -1,
+			Versions:        []*library.Version{v},
+		}
+		byKey[key] = m
+		lib.Movies = append(lib.Movies, m)
+	}
+	progress("local", total, total, "")
 }
 
 func makeVersion(f *scanner.FileEntry) *library.Version {
@@ -339,6 +381,10 @@ func or(a, b string) string {
 // --- Séries ---
 
 func buildSeries(lib *library.Library, files []*scanner.FileEntry, client *tmdb.Client, dataDir string, overrides map[string]Override, progress Progress) {
+	if !client.HasKey() {
+		buildSeriesLocal(lib, files, progress)
+		return
+	}
 	// regrouper par titre de série plié
 	groups := map[string][]*scanner.FileEntry{}
 	var order []string
@@ -429,6 +475,90 @@ func buildSeries(lib *library.Library, files []*scanner.FileEntry, client *tmdb.
 		attachEpisodes(s, group, client, dataDir)
 	}
 	progress("series", total, total, "")
+}
+
+// buildSeriesLocal construit les fiches séries sans TMDB, à partir du parsing
+// des noms de fichiers (titre de série, saison, épisode).
+func buildSeriesLocal(lib *library.Library, files []*scanner.FileEntry, progress Progress) {
+	groups := map[string][]*scanner.FileEntry{}
+	var order []string
+	for _, f := range files {
+		key := parse.Fold(f.SeriesTitle)
+		if key == "" {
+			key = "?"
+		}
+		if _, ok := groups[key]; !ok {
+			order = append(order, key)
+		}
+		groups[key] = append(groups[key], f)
+	}
+	sort.Strings(order)
+	total := len(order)
+
+	for gi, key := range order {
+		group := groups[key]
+		title := group[0].SeriesTitle
+		progress("local", gi, total, title)
+
+		s := &library.Series{
+			ID:              library.PathID("tv", group[0].RelPath),
+			MatchConfidence: 1,
+			Title:           title,
+			AgeRating:       -1,
+		}
+		folderSeen := map[string]bool{}
+		for _, f := range group {
+			top := f.RelPath
+			if i := strings.Index(top, "/"); i > 0 {
+				if j := strings.Index(top[i+1:], "/"); j > 0 {
+					top = top[:i+1+j]
+				}
+			}
+			if !folderSeen[top] {
+				folderSeen[top] = true
+				s.Folders = append(s.Folders, top)
+			}
+			if f.FromFilms {
+				s.Misplaced = true
+			}
+		}
+		attachEpisodesLocal(s, group)
+		lib.Series = append(lib.Series, s)
+	}
+	progress("local", total, total, "")
+}
+
+// attachEpisodesLocal rattache les fichiers aux saisons/épisodes sans TMDB.
+func attachEpisodesLocal(s *library.Series, group []*scanner.FileEntry) {
+	seasons := map[int]*library.Season{}
+	for _, f := range group {
+		sn := f.Season
+		if sn == 0 {
+			sn = 1
+		}
+		season, ok := seasons[sn]
+		if !ok {
+			season = &library.Season{Number: sn}
+			seasons[sn] = season
+			s.Seasons = append(s.Seasons, season)
+		}
+		var ep *library.Episode
+		for _, e := range season.Episodes {
+			if e.Episode == f.Episode {
+				ep = e
+				break
+			}
+		}
+		if ep == nil {
+			ep = &library.Episode{Season: sn, Episode: f.Episode}
+			season.Episodes = append(season.Episodes, ep)
+		}
+		ep.Files = append(ep.Files, makeVersion(f))
+	}
+	sort.Slice(s.Seasons, func(i, j int) bool { return s.Seasons[i].Number < s.Seasons[j].Number })
+	for _, se := range s.Seasons {
+		sort.Slice(se.Episodes, func(i, j int) bool { return se.Episodes[i].Episode < se.Episodes[j].Episode })
+	}
 }
 
 func matchTV(title, relPath string, client *tmdb.Client, overrides map[string]Override) (*tmdb.SearchResult, float64) {

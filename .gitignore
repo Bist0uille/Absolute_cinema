@@ -5,6 +5,10 @@
 dist/
 release/
 
+# VLC portable téléchargé par build/fetch-tools.sh (~250 Mo, non commité)
+build/disk-template/
+build/.tools-cache/
+
 # Divers
 *.log
 node_modules/

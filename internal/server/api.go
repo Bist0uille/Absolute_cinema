@@ -119,12 +119,19 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 			sub = a
 		}
 	}
-	res, err := player.Play(abs, parts, sub)
+	res, err := player.Play(s.Paths.MediaRoot, abs, parts, sub)
 	if err != nil {
 		writeErr(w, 404, err.Error())
 		return
 	}
 	writeJSON(w, 200, res)
+}
+
+// handleCapabilities renseigne l'UI sur les moyens de lecture disponibles.
+func (s *Server) handleCapabilities(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, map[string]any{
+		"vlc": player.VLCKind(s.Paths.MediaRoot),
+	})
 }
 
 func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {

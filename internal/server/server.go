@@ -8,10 +8,13 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"absolute_cinema/internal/catalog"
 	"absolute_cinema/internal/config"
+	"absolute_cinema/internal/fsutil"
 	"absolute_cinema/internal/library"
 	"absolute_cinema/internal/tmdb"
 )
@@ -42,6 +45,7 @@ type Server struct {
 
 // New charge l'état depuis le disque.
 func New(paths config.Paths) (*Server, error) {
+	seedFromDisk(paths)
 	cfg, err := config.Load(paths.ConfigFile())
 	if err != nil {
 		return nil, fmt.Errorf("config.json : %w", err)
@@ -57,6 +61,36 @@ func New(paths config.Paths) (*Server, error) {
 	s := &Server{Paths: paths, lib: lib, cfg: cfg, overrides: ov}
 	s.applyManualRatings()
 	return s, nil
+}
+
+// seedFromDisk amorce le cache local depuis un catalogue pré-scanné livré sur
+// le disque, quand celui-ci est en lecture seule (les données sont alors
+// stockées dans le cache local, où le library.json du disque ne serait pas lu).
+// Copie une seule fois : ne fait rien si le cache local a déjà un catalogue.
+func seedFromDisk(paths config.Paths) {
+	if !paths.ReadOnly {
+		return // le disque est inscriptible : library.json y est lu directement
+	}
+	diskData := filepath.Join(paths.MediaRoot, config.DataDirName)
+	diskLib := filepath.Join(diskData, "library.json")
+	if _, err := os.Stat(diskLib); err != nil {
+		return // aucun catalogue pré-scanné à amorcer
+	}
+	if _, err := os.Stat(paths.LibraryFile()); err == nil {
+		return // cache local déjà peuplé
+	}
+	if err := fsutil.CopyFile(diskLib, paths.LibraryFile()); err != nil {
+		log.Printf("amorçage library.json : %v", err)
+		return
+	}
+	// médias en cache (affiches, fonds, réponses TMDB) pour l'affichage hors ligne.
+	// On ne copie PAS config.json : il contient la clé TMDB du vendeur, qui ne
+	// doit pas être transmise (CGU TMDB + fuite de clé).
+	for _, sub := range []string{"posters", "backdrops", "tmdb_cache"} {
+		if _, err := os.Stat(filepath.Join(diskData, sub)); err == nil {
+			_ = fsutil.CopyTree(filepath.Join(diskData, sub), filepath.Join(paths.DataDir, sub))
+		}
+	}
 }
 
 // HasLibrary indique si un scan a déjà été fait.
@@ -163,6 +197,7 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /media-cache/", http.StripPrefix("/media-cache/", http.FileServer(http.Dir(s.Paths.DataDir))))
 
 	mux.HandleFunc("GET /api/library", s.handleLibrary)
+	mux.HandleFunc("GET /api/capabilities", s.handleCapabilities)
 	mux.HandleFunc("POST /api/scan", s.handleScanStart)
 	mux.HandleFunc("GET /api/scan/status", s.handleScanStatus)
 	mux.HandleFunc("POST /api/play", s.handlePlay)
