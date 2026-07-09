@@ -9,6 +9,7 @@ const app = $("#app");
 
 const state = {
   lib: { movies: [], series: [], unmatched: [] },
+  caps: { vlc: "none" },
   tab: "films",
   filters: { genre: "", lang: "", decade: "", sort: "titre" },
   search: "",
@@ -183,6 +184,15 @@ const EN = {
   "Lancer le scan 🎬": "Start the scan 🎬",
   "La clé reste sur votre disque, rien n'est envoyé ailleurs.": "The key stays on your drive; nothing is sent anywhere else.",
   "Pensez aussi à installer VLC pour la lecture :": "Also install VLC for playback:",
+  "2. Lancez le scan": "2. Start the scan",
+  "On démarre tout de suite : vos films et séries sont reconnus d'après leurs noms de fichiers.":
+    "Let's start right away: your movies and shows are recognized from their file names.",
+  "Scanner maintenant 🎬": "Scan now 🎬",
+  "J'ai une clé TMDB (affiches & résumés) — optionnel": "I have a TMDB key (posters & summaries) — optional",
+  "Valider la clé et scanner": "Validate key and scan",
+  "Lecteur VLC inclus : rien à installer. ✓": "VLC player included: nothing to install. ✓",
+  "Analyse locale des fichiers": "Reading local files",
+  "Ajoutez une clé TMDB pour les affiches et les résumés.": "Add a TMDB key for posters and summaries.",
   /* lecteur intégré & Netflix-like */
   "Reprendre": "Resume",
   "Commencer": "Start",
@@ -300,6 +310,23 @@ function updateChrome() {
     banner.textContent = `🧸 ${t("Mode enfant — seuls les titres jusqu'à")} ${state.lib.kid_max_age} ${t("ans sont visibles")}`;
     $("#topbar").after(banner);
   } else if (!kid && banner) banner.remove();
+
+  // bandeau « ajouter une clé TMDB » : seulement si des affiches manquent
+  // réellement (mode local), pas sur un disque déjà pré-scanné avec jaquettes
+  let kb = $("#keybanner");
+  const wantKey = !kid && !state.lib.has_key && needsMetadata();
+  if (wantKey && !kb) {
+    kb = document.createElement("div");
+    kb.id = "keybanner";
+    kb.innerHTML = `🎨 ${t("Ajoutez une clé TMDB pour les affiches et les résumés.")} <a href="#/reglages">${t("Réglages")}</a>`;
+    $("#topbar").after(kb);
+  } else if (!wantKey && kb) kb.remove();
+}
+
+// needsMetadata : au moins un titre sans affiche (bibliothèque en mode local).
+function needsMetadata() {
+  const items = [...(state.lib.movies || []), ...(state.lib.series || [])];
+  return items.length > 0 && items.some(m => !m.poster);
 }
 
 window._kidToggle = () => {
@@ -401,12 +428,14 @@ function ratingPicker(mediaType, tmdbID, current) {
 /* ---------- chargement ---------- */
 
 async function loadLibrary() {
-  const [data, progress] = await Promise.all([
+  const [data, progress, caps] = await Promise.all([
     api("/api/library"),
     api("/api/progress").catch(() => ({})),
+    api("/api/capabilities").catch(() => ({ vlc: "none" })),
   ]);
   state.lib = data;
   state.progress = progress;
+  state.caps = caps;
   state.scanning = data.scanning;
   state.lang = resolveLang();
   if (data.scanning) pollScan();
@@ -424,7 +453,7 @@ function pollScan() {
       const st = await api("/api/scan/status");
       const label = $(".scan-label", bar);
       const fill = $(".scan-fill", bar);
-      const phases = { walk: t("Parcours du disque"), tmdb: t("Films — récupération TMDB"), series: t("Séries — récupération TMDB") };
+      const phases = { walk: t("Parcours du disque"), tmdb: t("Films — récupération TMDB"), series: t("Séries — récupération TMDB"), local: t("Analyse locale des fichiers") };
       if (st.scanning) {
         const pct = st.total ? Math.round(100 * st.done / st.total) : 0;
         label.textContent = `${phases[st.phase] || st.phase}… ${st.total ? `${st.done}/${st.total} (${pct} %)` : ""} ${st.current || ""}`;
@@ -744,23 +773,43 @@ function renderOnboarding() {
       </div>
     </div>
     <div class="block">
-      <h2>${t("2. Collez votre clé TMDB gratuite")}</h2>
-      <p class="help">${t("Les affiches et synopsis viennent de The Movie Database. Créez un compte gratuit (2 min), puis copiez la « clé d'API » depuis")}
-        <a href="https://www.themoviedb.org/settings/api" target="_blank">${t("Paramètres → API")}</a>.</p>
+      <h2>${t("2. Lancez le scan")}</h2>
+      <p class="help">${t("On démarre tout de suite : vos films et séries sont reconnus d'après leurs noms de fichiers.")}</p>
       <div class="field">
-        <input type="password" id="ob-key" placeholder="${t("Votre clé API TMDB")}">
+        <button class="play" style="width:100%" onclick="_obScanLocal()">${t("Scanner maintenant 🎬")}</button>
       </div>
-      <div class="field">
-        <button class="play" style="width:100%" onclick="_obGo()">${t("Lancer le scan 🎬")}</button>
-      </div>
-      <p class="help">${t("La clé reste sur votre disque, rien n'est envoyé ailleurs.")}
-        ${t("Pensez aussi à installer VLC pour la lecture :")} <a href="https://www.videolan.org" target="_blank">videolan.org</a></p>
+      <details style="margin-top:12px">
+        <summary class="help" style="cursor:pointer">${t("J'ai une clé TMDB (affiches & résumés) — optionnel")}</summary>
+        <p class="help" style="margin-top:10px">${t("Les affiches et synopsis viennent de The Movie Database. Créez un compte gratuit (2 min), puis copiez la « clé d'API » depuis")}
+          <a href="https://www.themoviedb.org/settings/api" target="_blank">${t("Paramètres → API")}</a>.</p>
+        <div class="field">
+          <input type="password" id="ob-key" placeholder="${t("Votre clé API TMDB")}">
+        </div>
+        <div class="field">
+          <button class="play" style="width:100%" onclick="_obGo()">${t("Valider la clé et scanner")}</button>
+        </div>
+        <p class="help">${t("La clé reste sur votre disque, rien n'est envoyé ailleurs.")}</p>
+      </details>
+      ${state.caps.vlc === "none" ? `<p class="help" style="margin-top:12px">${t("Pensez aussi à installer VLC pour la lecture :")} <a href="https://www.videolan.org" target="_blank">videolan.org</a></p>` : `<p class="help" style="margin-top:12px">${t("Lecteur VLC inclus : rien à installer. ✓")}</p>`}
     </div>
   </div>`;
 }
 
 window._obLang = (l) => { state.lang = l; localStorage.setItem("ac_lang", l); updateChrome(); render(); };
 window._obMeta = (m) => { state.obMeta = m; render(); };
+window._obScanLocal = async () => {
+  try {
+    await api("/api/config", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ui_lang: state.lang,
+        metadata_lang: state.obMeta || (state.lang === "en" ? "en-US" : "fr-FR"),
+      }),
+    });
+    startScan();
+    app.innerHTML = `<div class="empty"><div class="big">🎬</div></div>`;
+  } catch (e) { toast(e.message, 6000); }
+};
 window._obGo = async () => {
   const key = $("#ob-key").value.trim();
   if (!key) { toast(t("Collez d'abord votre clé.")); return; }
@@ -1391,14 +1440,15 @@ async function renderSettings() {
         ? `This software organizes files you already own; it does not include, provide or download any movie.<br><br>
            Metadata and artwork by <a href="https://www.themoviedb.org" target="_blank">The Movie Database (TMDB)</a>.
            This product uses the TMDB API but is not endorsed or certified by TMDB.
-           Playback via <a href="https://www.videolan.org" target="_blank">VLC</a> (independent software, installed separately).`
+           Playback via <a href="https://www.videolan.org" target="_blank">VLC</a>
+           ${state.caps.vlc === "embedded" ? "(included on this drive, GPL — independent software)." : "(independent software, installed separately)."}`
         : `Ce logiciel organise des fichiers que vous possédez déjà ; il n'inclut, ne fournit
            et ne télécharge aucun film.<br><br>
            Métadonnées et affiches fournies par
            <a href="https://www.themoviedb.org" target="_blank">The Movie Database (TMDB)</a>.
            Ce produit utilise l'API TMDB sans être approuvé ni certifié par TMDB.
            Lecture vidéo assurée par <a href="https://www.videolan.org" target="_blank">VLC</a>
-           (logiciel indépendant, à installer séparément).`}
+           ${state.caps.vlc === "embedded" ? "(inclus sur ce disque, licence GPL — logiciel indépendant)." : "(logiciel indépendant, à installer séparément)."}`}
     </p>
   </div>`;
 }
@@ -1512,7 +1562,7 @@ window._saveKey = async () => {
     });
     toast(t("Clé validée et enregistrée ✓"));
     state.lib.has_key = true;
-    if (!(state.lib.movies || []).length) startScan();
+    startScan(); // (re)scan pour enrichir les fiches avec affiches & résumés
     renderSettings();
   } catch (e) { toast(e.message, 6000); }
 };

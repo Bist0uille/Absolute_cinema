@@ -120,6 +120,11 @@ main { padding: 24px; max-width: 1500px; margin: 0 auto; }
   padding: 7px 24px; background: #14320f; border-bottom: 1px solid #275220;
   color: #a3d99b; font-size: 13.5px;
 }
+#keybanner {
+  padding: 7px 24px; background: #1a1405; border-bottom: 1px solid #3d3110;
+  color: var(--accent); font-size: 13.5px;
+}
+#keybanner a { color: var(--accent); font-weight: 600; }
 .agepick { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .agepick button {
   border: 1px solid #2b3047; background: var(--bg2); color: var(--fg);
