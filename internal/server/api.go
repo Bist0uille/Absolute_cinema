@@ -34,9 +34,12 @@ func (s *Server) absMediaPath(rel string) (string, error) {
 	if rel == "" || strings.Contains(rel, "..") {
 		return "", errors.New("chemin invalide")
 	}
+	if filepath.IsAbs(rel) {
+		return "", errors.New("chemin absolu interdit")
+	}
 	abs := filepath.Join(s.Paths.MediaRoot, filepath.FromSlash(rel))
-	root := filepath.Clean(s.Paths.MediaRoot)
-	if !strings.HasPrefix(filepath.Clean(abs), root+string(filepath.Separator)) {
+	inside, err := filepath.Rel(s.Paths.MediaRoot, abs)
+	if err != nil || inside == ".." || strings.HasPrefix(inside, ".."+string(filepath.Separator)) {
 		return "", errors.New("chemin hors de la bibliothèque")
 	}
 	return abs, nil

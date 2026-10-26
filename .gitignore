@@ -12,3 +12,4 @@ build/.tools-cache/
 # Divers
 *.log
 node_modules/
+.tools/

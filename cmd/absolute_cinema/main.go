@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"absolute_cinema/internal/config"
+	"absolute_cinema/internal/desktop"
 	"absolute_cinema/internal/player"
 	"absolute_cinema/internal/scanner"
 	"absolute_cinema/internal/server"
@@ -45,6 +46,7 @@ func main() {
 	rootFlag := flag.String("root", "", "racine de la médiathèque (défaut : dossier de l'exécutable)")
 	portFlag := flag.Int("port", 0, "port HTTP (défaut : 8484, ou le suivant libre)")
 	noBrowser := flag.Bool("no-browser", false, "ne pas ouvrir le navigateur au démarrage")
+	browserFlag := flag.Bool("browser", false, "ouvrir l'interface web plutôt que la fenêtre native Windows")
 	flag.Parse()
 
 	mediaRoot := *rootFlag
@@ -91,6 +93,7 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 	url := fmt.Sprintf("http://127.0.0.1:%d", port)
+	defer ln.Close()
 
 	// scan automatique à chaque démarrage (les nouveaux fichiers apparaissent
 	// tout seuls ; tout ce qui est inchangé vient du cache, donc c'est rapide).
@@ -108,8 +111,19 @@ func main() {
 	fmt.Println("  (Ctrl+C pour quitter)")
 	fmt.Println()
 
+	serveErr := make(chan error, 1)
+	go func() { serveErr <- http.Serve(ln, srv.Handler()) }()
 	if !*noBrowser {
+		if !*browserFlag {
+			used, err := desktop.Run(url, paths, srv)
+			if used {
+				return
+			}
+			if err != nil {
+				log.Printf("lecteur natif indisponible, interface web : %v", err)
+			}
+		}
 		player.OpenBrowser(url)
 	}
-	log.Fatal(http.Serve(ln, srv.Handler()))
+	log.Fatal(<-serveErr)
 }

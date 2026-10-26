@@ -137,7 +137,8 @@ func isValidUTF8(b []byte) bool {
 
 // ProgressEntry est l'état de visionnage d'un fichier.
 type ProgressEntry struct {
-	Position  float64   `json:"position"` // secondes
+	Part      int       `json:"part,omitempty"` // native multi-part playback
+	Position  float64   `json:"position"`       // secondes
 	Duration  float64   `json:"duration"`
 	Watched   bool      `json:"watched"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -170,6 +171,8 @@ func (s *Server) saveProgress(m map[string]ProgressEntry) error {
 }
 
 func (s *Server) handleProgressGet(w http.ResponseWriter, r *http.Request) {
+	s.progressMu.Lock()
+	defer s.progressMu.Unlock()
 	prog := s.loadProgress()
 	s.mu.Lock()
 	kid := s.cfg.KidMode
@@ -190,6 +193,7 @@ func (s *Server) handleProgressGet(w http.ResponseWriter, r *http.Request) {
 }
 
 type progressRequest struct {
+	Part     *int    `json:"part,omitempty"`
 	Path     string  `json:"path"`
 	Position float64 `json:"position"`
 	Duration float64 `json:"duration"`
@@ -197,6 +201,8 @@ type progressRequest struct {
 }
 
 func (s *Server) handleProgressSet(w http.ResponseWriter, r *http.Request) {
+	s.progressMu.Lock()
+	defer s.progressMu.Unlock()
 	var req progressRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Path == "" {
 		writeErr(w, 400, "requête invalide")
@@ -208,6 +214,9 @@ func (s *Server) handleProgressSet(w http.ResponseWriter, r *http.Request) {
 	}
 	prog := s.loadProgress()
 	e := prog[req.Path]
+	if req.Part != nil && *req.Part >= 0 {
+		e.Part = *req.Part
+	}
 	if req.Position >= 0 {
 		e.Position = req.Position
 	}

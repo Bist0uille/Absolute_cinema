@@ -36,11 +36,12 @@ type ScanState struct {
 type Server struct {
 	Paths config.Paths
 
-	mu        sync.Mutex
-	lib       *library.Library
-	cfg       *config.Config
-	overrides map[string]catalog.Override
-	scan      ScanState
+	mu         sync.Mutex
+	progressMu sync.Mutex
+	lib        *library.Library
+	cfg        *config.Config
+	overrides  map[string]catalog.Override
+	scan       ScanState
 }
 
 // New charge l'état depuis le disque.

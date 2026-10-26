@@ -76,6 +76,14 @@ func findVLC(mediaRoot string) string {
 	return installedVLC()
 }
 
+// LibraryDirectory locates the VLC distribution used by the native LibVLC host.
+func LibraryDirectory(mediaRoot string) string {
+	if executable := findVLC(mediaRoot); executable != "" {
+		return filepath.Dir(executable)
+	}
+	return ""
+}
+
 // embeddedVLC retourne le chemin de l'exécutable VLC portable livré sur le
 // disque, ou "" s'il est absent/inutilisable. Sur Mac, si l'exécutable ne peut
 // être lancé en place (bit exécutable absent sur certains montages en lecture
