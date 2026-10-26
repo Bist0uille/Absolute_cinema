@@ -23,7 +23,9 @@ configurer, et sans internet une fois le premier scan terminé.
   filtrage appliqué côté serveur — pas un simple masquage
 - 🧹 **Doublons** : détection des films en double avec recommandation de la meilleure
   version, corbeille restaurable
-- ▶ **Lecture en un clic** dans VLC (avec choix des sous-titres)
+- ▶ **Lecture en un clic** : moteur LibVLC intégré à la fenêtre Windows 64 bits,
+  avec pause, déplacement, volume, pistes audio, sous-titres et reprise de lecture.
+  Sur Mac/Linux et dans le navigateur, lecture web ou ouverture dans VLC.
 - 🔌 **Vraiment portable** : la bibliothèque, le cache et les réglages vivent sur le
   disque, dans `.absolute_cinema/`. Changez d'ordinateur, tout suit.
 
@@ -33,7 +35,9 @@ configurer, et sans internet une fois le premier scan terminé.
    [Releases](https://github.com/Bist0uille/Absolute_cinema/releases), et posez-le
    **à la racine de votre disque dur de films**, à côté de vos dossiers de films/séries
    (nommés par ex. `[Films]` et `[Séries]`, ou tout nom contenant « films »/« séries »).
-2. Double-cliquez (Windows : `AbsoluteCinema-Windows.exe`). Le navigateur s'ouvre.
+2. Double-cliquez (Windows : `AbsoluteCinema-Windows.exe`). Sous Windows 64 bits,
+   la fenêtre native s'ouvre avec le moteur LibVLC de votre VLC installé ou embarqué.
+   WebView2 est nécessaire pour le catalogue ; sinon l'interface web s'ouvre.
 3. Au premier lancement, collez votre **clé API TMDB** dans Réglages (compte gratuit sur
    [themoviedb.org](https://www.themoviedb.org/signup), clé v3 dans
    [Paramètres → API](https://www.themoviedb.org/settings/api)) et lancez le scan.
@@ -50,10 +54,14 @@ bash build/build.sh                   # les 4 cibles (Windows, Mac Intel/ARM, Li
 go test ./...                         # tests (le parseur de noms est le cœur testé)
 ```
 
-Go ≥ 1.22, aucune dépendance externe (stdlib uniquement). L'interface web (vanilla JS)
+Go ≥ 1.26. La fenêtre Windows utilise `go-webview2` et charge les DLL de VLC 3
+à l'exécution (aucun compilateur C nécessaire). Les dépendances sont verrouillées
+dans `go.mod` / `go.sum`. L'interface web (vanilla JS)
 est embarquée dans le binaire via `go:embed`.
 
 En développement : `go run ./cmd/absolute_cinema -root "/chemin/vers/le/disque"`.
+L'option `-browser` ouvre le navigateur, `-no-browser` démarre seulement le serveur.
+Voir [la lecture native](docs/native-player.md) pour l'architecture et les tests.
 
 ## Architecture (en bref)
 

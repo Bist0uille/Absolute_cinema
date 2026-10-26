@@ -22,7 +22,9 @@ server to set up, and no internet once the first scan is done.
 - 🧸 **Kids mode**: PIN code + maximum age (official movie ratings), enforced
   server-side — not mere hiding
 - 🧹 **Duplicates**: detection with a "best version" recommendation and a restorable trash
-- ▶ **One-click playback** in VLC (with subtitle selection)
+- ▶ **One-click playback** with LibVLC inside the Windows 64-bit application window,
+  including seeking, audio/subtitle tracks and resume. Mac/Linux and browser clients
+  retain browser playback and external VLC.
 - 🔌 **Truly portable**: the library, cache and settings live on the drive in
   `.absolute_cinema/`. Switch computers, everything follows.
 
@@ -32,7 +34,9 @@ server to set up, and no internet once the first scan is done.
    [Releases](https://github.com/Bist0uille/Absolute_cinema/releases) and unzip it
    **at the root of your movie hard drive**, next to your movie folders (any folder
    name containing "movies"/"films" or "series"/"shows" is detected).
-2. Double-click (Windows: `AbsoluteCinema-Windows.exe`). Your browser opens.
+2. Double-click (Windows: `AbsoluteCinema-Windows.exe`). Windows 64-bit opens the
+   native window using installed or bundled VLC 3 and the WebView2 runtime.
+   The browser interface remains available as a fallback.
 3. On first launch, a welcome screen asks for your **free TMDB API key**
    ([sign up](https://www.themoviedb.org/signup), then copy the v3 key from
    [Settings → API](https://www.themoviedb.org/settings/api)) and starts the scan.
@@ -46,7 +50,9 @@ bash build/build.sh                   # all 4 targets (Windows, Mac Intel/ARM, L
 go test ./...
 ```
 
-Go ≥ 1.22, standard library only. The web UI (vanilla JS) is embedded in the binary
+Go ≥ 1.26. The Windows host uses `go-webview2` and dynamically loads VLC 3 DLLs;
+no C compiler is required. Dependencies are pinned in `go.mod` / `go.sum`.
+The web UI (vanilla JS) is embedded in the binary
 via `go:embed`. Development: `go run ./cmd/absolute_cinema -root "/path/to/drive"`.
 
 ## Legal notes

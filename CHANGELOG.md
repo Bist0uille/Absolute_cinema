@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.4.0-beta — 2026-10-26
+
+- Keep the Windows window responsive while LibVLC loads in the background.
+- Cinema fullscreen preserves the original aspect ratio with black bars and
+  hides controls until the pointer moves.
+- Move duplicate management into Settings and handle an empty trash list.
+- Reject incomplete MKV/WebM files before starting native playback.
+
+- Windows: embedded multi-resolution golden ticket icon and a dark native
+  title bar matching the catalogue; the browser favicon uses the same icon.
+
+- Windows amd64: native WebView2 window with an embedded LibVLC 3 video surface,
+  pause, seeking, volume, audio/subtitle tracks and fullscreen controls.
+- Native playback retains resume positions, including the current CD/part, and
+  stops decoding before the video window is destroyed.
+- Browser-only mode remains available with `-browser`; Mac/Linux retain the web UI.
+- Root-level media paths work when the library is installed directly on a drive.
+
 ## v1.3.2-beta — 2026-07-03
 
 - New brand identity: golden cinema-ticket logo (app top bar, favicon, website,
