@@ -315,6 +315,27 @@ tr.del td:first-child { border-left: 3px solid var(--accent2); }
 .player-title { font-size: 15px; font-weight: 600; color: #fff; }
 .player-top select { background: #1e2230; color: #fff; border: 1px solid #2b3047; border-radius: 6px; padding: 6px 9px; font-size: 12.5px; max-width: 300px; }
 #player-video { width: 100%; height: 100%; object-fit: contain; }
+.native-header { display:flex; align-items:center; gap:18px; min-height:60px; padding:10px 20px; background:#101218; }
+body.native-playing { overflow:hidden; }
+.native-player { overflow:hidden; }
+.native-player.cinema-mode.controls-hidden .native-header,
+.native-player.cinema-mode.controls-hidden .native-controls { display:none; }
+.native-player.cinema-mode.controls-hidden { cursor:none; }
+.native-error { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; text-align:center; padding:24px; color:#eee; }
+.native-error strong { font-size:22px; }
+.native-error p { max-width:520px; color:#aaa; }
+.native-player.playback-failed .native-controls { display:none; }
+.native-header .player-title { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#native-status { color:#b8b8c4; font-size:12px; }
+#native-surface { flex:1; min-height:0; background:#000; }
+.native-controls { padding:12px 20px 16px; background:#101218; color:#eee; }
+#native-seek { width:100%; accent-color:#e0a437; }
+.native-control-row { display:flex; align-items:center; gap:16px; margin-top:8px; flex-wrap:wrap; }
+.native-control-row label { display:flex; align-items:center; gap:8px; font-size:12px; max-width:100%; min-width:0; }
+.native-control-row select { min-width:0; max-width:230px; background:#1e2230; color:white; border:1px solid #36394b; padding:6px; border-radius:6px; }
+#native-volume { width:90px; accent-color:#e0a437; }
+#native-time { font-variant-numeric:tabular-nums; font-size:13px; margin-right:auto; }
+.native-player button:focus-visible, .native-player input:focus-visible, .native-player select:focus-visible { outline:2px solid #e0a437; outline-offset:3px; }
 #player-video::cue { background: rgba(0,0,0,.75); font-size: 1.05em; }
 #player-error {
   position: absolute; inset: 0; display: flex; flex-direction: column;

@@ -1,7 +1,7 @@
 /* absolute_cinema — interface (vanilla JS, routing par hash) */
 "use strict";
 
-const APP_VERSION = "1.3.2";
+const APP_VERSION = "1.4.0";
 const GITHUB_REPO = "Bist0uille/Absolute_cinema";
 
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -201,6 +201,16 @@ const EN = {
   "Tout parcourir": "Browse all",
   "Fiche": "Details",
   "Lire dans VLC": "Play in VLC",
+  "Chargement…": "Loading…",
+  "Fermer": "Close",
+  "Position": "Playback position",
+  "Volume": "Volume",
+  "Piste audio": "Audio track",
+  "Plein écran": "Fullscreen",
+  "Fichier illisible": "Unreadable file",
+  "Le lecteur met trop de temps à démarrer. Réessayez dans un instant.": "The player is taking too long to start. Please try again shortly.",
+  "Impossible de lire ce fichier": "Cannot play this file",
+  "Le fichier est endommagé, incomplet ou son format n’est pas reconnu.": "The file is damaged, incomplete, or its format is not recognized.",
   "Ce format n'est pas lisible dans le navigateur.": "This format can't play in the browser.",
   "Le navigateur ne peut pas lire ce fichier (codec non supporté).": "The browser can't play this file (unsupported codec).",
   "Reprise à": "Resumed at",
@@ -235,7 +245,6 @@ function resolveLang() {
 function applyChromeLang() {
   document.documentElement.lang = state.lang;
   document.querySelector('[data-nav="home"]').textContent = t("Bibliothèque");
-  document.querySelector('[data-nav="doublons"]').textContent = t("Doublons");
   document.querySelector('[data-nav="reglages"]').textContent = t("Réglages");
   $("#search").placeholder = t("Rechercher un titre…");
 }
@@ -297,7 +306,6 @@ function ageBadge(a) {
 function updateChrome() {
   applyChromeLang();
   const kid = state.lib.kid_mode;
-  document.querySelector('[data-nav="doublons"]').style.display = kid ? "none" : "";
   document.querySelector('[data-nav="reglages"]').style.display = kid ? "none" : "";
   const btn = $("#kidbtn");
   btn.classList.toggle("on", !!kid);
@@ -570,6 +578,10 @@ function findVersionByPath(path) {
 // lecture intelligente : navigateur si possible, sinon VLC
 // (les films en plusieurs parties CD1/CD2 vont à VLC, qui les enchaîne)
 function playSmart(version, subPath, title) {
+  if (window.acNativeAvailable && window.openNativePlayer) {
+    window.openNativePlayer(version, subPath, title);
+    return;
+  }
   if ((version.parts || []).length === 0 && canPlayInBrowser(version)) openPlayer(version, subPath, title);
   else play(version.path, subPath, version.parts || []);
 }
@@ -647,11 +659,13 @@ function openPlayer(version, subPath, title) {
 
 function playerEsc(e) { if (e.key === "Escape") closePlayer(); }
 
-function saveProgress(path, position, duration, watched) {
+function saveProgress(path, position, duration, watched, part) {
   const body = { path, position, duration };
   if (watched !== undefined) body.watched = watched;
+  if (part !== undefined) body.part = part;
   state.progress = state.progress || {};
   state.progress[path] = { ...(state.progress[path] || {}), position, duration, watched: watched ?? (state.progress[path] || {}).watched };
+  if (part !== undefined) state.progress[path].part = part;
   fetch("/api/progress", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => { });
 }
 
@@ -682,7 +696,7 @@ window._playerToVLC = () => {
 
 /* lecture directe depuis une carte (1 clic) */
 function bestVersion(m) {
-  const score = v => (({ "2160p": 4, "1080p": 3, "720p": 2 })[v.resolution_tag] || 1) - (v.is_iso ? 10 : 0) + (canPlayInBrowser(v) ? 0.5 : 0);
+  const score = v => (({ "2160p": 4, "1080p": 3, "720p": 2 })[v.resolution_tag] || 1) - (v.is_iso ? 10 : 0) + (!window.acNativeAvailable && canPlayInBrowser(v) ? 0.5 : 0);
   return [...(m.versions || [])].sort((a, b) => score(b) - score(a))[0];
 }
 
@@ -740,7 +754,7 @@ function render() {
   if (page === "home" || page === "") { setNav("home"); renderHome(); }
   else if (page === "film") { setNav("home"); renderMovie(arg); }
   else if (page === "serie") { setNav("home"); renderSeries(arg); }
-  else if (page === "doublons") { setNav("doublons"); renderDupes(); }
+  else if (page === "doublons") { setNav("reglages"); renderDupes(); }
   else if (page === "reglages") { setNav("reglages"); renderSettings(); }
   else { setNav("home"); renderHome(); }
 }
@@ -1203,14 +1217,15 @@ async function renderDupes() {
   app.innerHTML = `<div class="empty">${t("Chargement…")}</div>`;
   let d;
   try { d = await api("/api/duplicates"); } catch (e) { app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
-  const trash = await api("/api/trash").catch(() => []);
+  const trash = (await api("/api/trash").catch(() => [])) || [];
 
   const movieGroups = d.movies || [];
   const epDups = d.episodes || [];
   const misplaced = d.misplaced_series || [];
 
   app.innerHTML = `
-  <h1 style="margin-bottom:18px">${t("Doublons")}</h1>
+  <a href="#/reglages">← ${t("Réglages")}</a>
+  <h1 style="margin:18px 0">${t("Doublons")}</h1>
   ${state.lib.readonly ? `<div class="block" style="border-left:3px solid var(--accent2)">${t("Disque en lecture seule : la suppression est désactivée.")}</div>` : ""}
   ${!movieGroups.length && !epDups.length && !misplaced.length ? `<div class="empty"><div class="big">✨</div>${t("Aucun doublon détecté.")}</div>` : ""}
 
@@ -1348,6 +1363,11 @@ async function renderSettings() {
   app.innerHTML = `
   <h1 style="margin-bottom:18px">${t("Réglages")}</h1>
   ${updateBanner()}
+
+  <div class="block">
+    <h2>${t("Doublons")}</h2>
+    <a href="#/doublons">${t("Doublons")} →</a>
+  </div>
 
   <div class="block">
     <h2>${t("Langue / Language")}</h2>
